@@ -1,0 +1,95 @@
+---
+type Lesson = { label: string; href: string; isCurrent: boolean; section: string };
+
+const { sidebar } = Astro.locals.starlightRoute;
+
+// Top-level sidebar groups to exclude from the workshop progress count.
+const EXCLUDE_GROUPS = new Set(['Reference']);
+
+// Top-level groups define the section; nested groups inherit their parent's.
+function collectLessons(entries: any[], section: string | null): Lesson[] {
+  const out: Lesson[] = [];
+  for (const entry of entries) {
+    if (entry.type === 'link') {
+      out.push({
+        label: entry.label,
+        href: entry.href,
+        isCurrent: entry.isCurrent,
+        section: section ?? '',
+      });
+    } else if (entry.type === 'group' && !EXCLUDE_GROUPS.has(entry.label)) {
+      out.push(...collectLessons(entry.entries, section ?? entry.label));
+    }
+  }
+  return out;
+}
+
+const lessons = collectLessons(sidebar, null);
+const current = lessons.findIndex((l) => l.isCurrent);
+const total = lessons.length;
+const show = current !== -1 && total > 0;
+const percent = show ? Math.round(((current + 1) / total) * 100) : 0;
+const next = show ? lessons[current + 1] : undefined;
+
+// Section-aware position
+const section = show ? lessons[current].section : '';
+const sectionLessons = section ? lessons.filter((l) => l.section === section) : [];
+const sectionIndex = sectionLessons.findIndex((l) => l.isCurrent); // 0-based
+const sectionTotal = sectionLessons.length;
+---
+
+{show && (
+  <nav class="ws-progress" aria-label={`Lesson ${current + 1} of ${total}`}>
+    {section && sectionTotal > 1 && (
+      <p class="ws-progress__section">{section} · {sectionIndex + 1} of {sectionTotal}</p>
+    )}
+    <div class="ws-progress__meta">
+      <span class="ws-progress__count">Lesson {current + 1} of {total}</span>
+      {next && <a class="ws-progress__next" href={next.href}>Next: {next.label} →</a>}
+    </div>
+    <div class="ws-progress__track">
+      <div class="ws-progress__fill" style={`width: ${percent}%`} />
+    </div>
+  </nav>
+)}
+
+<style>
+  .ws-progress { margin-block: 0.75rem 1.25rem; }
+  .ws-progress__section {
+    margin: 0 0 0.25rem;
+    font-size: var(--sl-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--sl-color-accent-high);
+  }
+  .ws-progress__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    font-size: var(--sl-text-xs);
+    margin-block-end: 0.4rem;
+  }
+  .ws-progress__count { color: var(--sl-color-gray-3); font-weight: 600; }
+  .ws-progress__next {
+    color: var(--sl-color-gray-3);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ws-progress__next:hover { color: var(--sl-color-accent-high); }
+  .ws-progress__track {
+    height: 0.4rem;
+    border-radius: 999px;
+    background: var(--sl-color-gray-6);
+    overflow: hidden;
+  }
+  .ws-progress__fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--sl-color-accent);
+    transition: width 0.3s ease;
+  }
+</style>

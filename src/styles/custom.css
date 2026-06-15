@@ -1,0 +1,15 @@
+/* Workshop-specific tweaks layered on top of Starlight's theme.
+   Everything here is optional — delete to fall back to defaults. */
+
+:root {
+  /* Uncomment to give the workshop a warmer accent than Starlight's default.
+  --sl-color-accent-low: #2d1b00;
+  --sl-color-accent: #b45309;
+  --sl-color-accent-high: #fbbf24;
+  */
+}
+
+/* A touch more breathing room inside lesson code blocks. */
+.sl-markdown-content pre {
+  padding-block: 0.9rem;
+}
