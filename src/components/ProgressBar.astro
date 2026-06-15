@@ -27,7 +27,9 @@ function collectLessons(entries: any[], section: string | null): Lesson[] {
 const lessons = collectLessons(sidebar, null);
 const current = lessons.findIndex((l) => l.isCurrent);
 const total = lessons.length;
-const show = current !== -1 && total > 0;
+// Only show progress for multi-lesson topics (e.g. a workshop), not single-page
+// topics like Guides, where a "Lesson 1 of 1" bar would be meaningless.
+const show = current !== -1 && total > 1;
 const percent = show ? Math.round(((current + 1) / total) * 100) : 0;
 const next = show ? lessons[current + 1] : undefined;
 

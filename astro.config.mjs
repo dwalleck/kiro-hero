@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightSidebarTopics from 'starlight-sidebar-topics';
 
 // If you deploy under a subpath (e.g. a Forgejo Pages project site rather than a
 // root domain), also set `site` and `base` here — see the README.
@@ -9,25 +10,51 @@ export default defineConfig({
     starlight({
       title: 'Zero to Kiro Hero',
       description: 'A hands-on workshop for getting productive with the Kiro IDE.',
-      customCss: ['./src/styles/custom.css'],
+      customCss: [
+        // Self-hosted variable fonts (loaded before the theme so --sl-font can use them).
+        '@fontsource-variable/inter',
+        '@fontsource-variable/jetbrains-mono',
+        './src/styles/custom.css',
+      ],
       components: {
         // Wraps the default page title and renders the workshop progress bar below it.
         PageTitle: './src/components/PageTitle.astro',
       },
-      sidebar: [
-        {
-          label: 'Setup',
-          items: [
-            { label: 'Prerequisites', slug: '00-setup/prerequisites' },
-            { label: 'Install Kiro', slug: '00-setup/install-kiro' },
-            { label: 'Verify your setup', slug: '00-setup/verify' },
-          ],
-        },
-        { label: 'First Steps', items: [{ autogenerate: { directory: '01-first-steps' } }] },
-        { label: 'Spec-Driven Development', items: [{ autogenerate: { directory: '02-spec-driven' } }] },
-        { label: 'Build a Real Feature', items: [{ autogenerate: { directory: '03-build-it' } }] },
-        { label: 'Going Further', items: [{ autogenerate: { directory: '04-going-further' } }] },
-        { label: 'Reference', collapsed: true, items: [{ autogenerate: { directory: 'reference' } }] },
+      plugins: [
+        // Splits the site into "topics" — a flat switcher above the sidebar where
+        // each topic carries its own independent sidebar. One topic per workshop:
+        // to add another workshop, drop its content under workshops/<name>/ and add
+        // a sibling topic object below (label = the workshop's name, link = its first
+        // lesson). The progress bar scopes itself to whichever topic is active.
+        starlightSidebarTopics([
+          {
+            label: 'Guides',
+            link: '/guides/getting-started/',
+            icon: 'open-book',
+            items: [{ label: 'Guides', items: ['guides/getting-started'] }],
+          },
+          {
+            label: 'Zero to Kiro Hero',
+            link: '/workshops/zero-to-kiro-hero/00-setup/prerequisites/',
+            icon: 'rocket',
+            // Top-level groups here are the "sections" the progress bar counts within.
+            items: [
+              {
+                label: 'Setup',
+                items: [
+                  { label: 'Prerequisites', slug: 'workshops/zero-to-kiro-hero/00-setup/prerequisites' },
+                  { label: 'Install Kiro', slug: 'workshops/zero-to-kiro-hero/00-setup/install-kiro' },
+                  { label: 'Verify your setup', slug: 'workshops/zero-to-kiro-hero/00-setup/verify' },
+                ],
+              },
+              { label: 'First Steps', items: [{ autogenerate: { directory: 'workshops/zero-to-kiro-hero/01-first-steps' } }] },
+              { label: 'Spec-Driven Development', items: [{ autogenerate: { directory: 'workshops/zero-to-kiro-hero/02-spec-driven' } }] },
+              { label: 'Build a Real Feature', items: [{ autogenerate: { directory: 'workshops/zero-to-kiro-hero/03-build-it' } }] },
+              { label: 'Going Further', items: [{ autogenerate: { directory: 'workshops/zero-to-kiro-hero/04-going-further' } }] },
+              { label: 'Reference', collapsed: true, items: [{ autogenerate: { directory: 'workshops/zero-to-kiro-hero/reference' } }] },
+            ],
+          },
+        ]),
       ],
     }),
   ],

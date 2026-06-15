@@ -1,15 +1,126 @@
-/* Workshop-specific tweaks layered on top of Starlight's theme.
-   Everything here is optional — delete to fall back to defaults. */
+/*
+ * Kiro Control Center design system, ported onto Starlight.
+ *
+ * Strategy: Starlight derives every semantic color (--sl-color-bg,
+ * --sl-color-text, --sl-color-hairline, etc.) from a 7-step gray scale plus
+ * white/black and a 3-stop accent. Override those primitives and the whole
+ * site re-themes without touching any component.
+ *
+ * Source of truth: kiro-control-center/crates/kiro-control-center/src/app.css
+ * Values are OKLCH, carried over verbatim where they map 1:1; intermediate
+ * scale steps are interpolated to keep lightness monotonic.
+ *
+ *   kiro --kiro-base      -> app background      (--sl-color-black / bg)
+ *   kiro --kiro-surface   -> sidebar / nav / inline-code (gray-6)
+ *   kiro --kiro-muted     -> borders / hairlines (gray-5)
+ *   kiro --kiro-subtle    -> dim text            (gray-4)
+ *   kiro --kiro-text-secondary -> muted text     (gray-3)
+ *   kiro --kiro-text      -> headings / strong    (--sl-color-white)
+ *   kiro --kiro-accent-*  -> accent purple stops
+ */
 
+/* ── Fonts ───────────────────────────────────────────────────────────── */
 :root {
-  /* Uncomment to give the workshop a warmer accent than Starlight's default.
-  --sl-color-accent-low: #2d1b00;
-  --sl-color-accent: #b45309;
-  --sl-color-accent-high: #fbbf24;
-  */
+  --sl-font: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --sl-font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
+
+/* ── Accent purple (kiro's static scale, sampled per mode for contrast) ─── */
+/* Dark mode is Starlight's default (:root). */
+:root {
+  /* low = dark purple surface, accent = mid, high = light purple text */
+  --sl-color-accent-low: oklch(26.77% 0.1065 297.06);   /* kiro accent-900 */
+  --sl-color-accent: oklch(49.95% 0.213 295.09);        /* kiro accent-600 */
+  --sl-color-accent-high: oklch(70.14% 0.1831 299.07);  /* kiro accent-300 */
+}
+
+/* ── Gray scale + surfaces — DARK (default) ─────────────────────────────── */
+:root {
+  --sl-color-white: oklch(100% 0 0);                    /* kiro --kiro-text  */
+  --sl-color-gray-1: oklch(93% 0.006 301);
+  --sl-color-gray-2: oklch(85% 0.012 301);              /* body text         */
+  --sl-color-gray-3: oklch(65.73% 0.0182 300.94);       /* kiro text-secondary */
+  --sl-color-gray-4: oklch(48% 0.032 300);
+  --sl-color-gray-5: oklch(32.22% 0.0291 301.89);       /* kiro --kiro-muted  */
+  --sl-color-gray-6: oklch(23.88% 0.0162 307.66);       /* kiro --kiro-surface */
+  --sl-color-gray-7: oklch(18% 0.012 304);
+  --sl-color-black: oklch(20.69% 0.0144 304.56);        /* kiro --kiro-base   */
+
+  /* kiro --kiro-overlay (card/input fill) has no default Starlight slot —
+     expose it so component tweaks can reference it. */
+  --kiro-overlay: oklch(26.9% 0.0191 303.28);
+}
+
+/* ── Semantic / admonition hues — DARK ──────────────────────────────────── */
+/* Starlight asides: *-low = tinted background, base = icon, *-high = text/border. */
+:root {
+  /* danger  <- kiro error  */
+  --sl-color-red-low: oklch(28% 0.08 22);
+  --sl-color-red: oklch(58% 0.155 22);
+  --sl-color-red-high: oklch(74.45% 0.155 21.49);
+  /* caution <- kiro warning */
+  --sl-color-orange-low: oklch(28% 0.05 70);
+  --sl-color-orange: oklch(70% 0.12 69);
+  --sl-color-orange-high: oklch(88.39% 0.088 69.59);
+  /* success <- kiro success */
+  --sl-color-green-low: oklch(28% 0.06 156);
+  --sl-color-green: oklch(62% 0.13 156);
+  --sl-color-green-high: oklch(90.81% 0.1542 156);
+  /* note    <- kiro info    */
+  --sl-color-blue-low: oklch(28% 0.06 245);
+  --sl-color-blue: oklch(60% 0.12 245);
+  --sl-color-blue-high: oklch(81.12% 0.0948 245.43);
+  /* tip     <- kiro accent purple */
+  --sl-color-purple-low: oklch(28% 0.09 297);
+  --sl-color-purple: oklch(58.87% 0.2534 294.98);       /* kiro accent-500 */
+  --sl-color-purple-high: oklch(83.09% 0.1019 302.28);  /* kiro accent-200 */
+}
+
+/* ── LIGHT MODE (explicit toggle: inverts the ramp) ─────────────────────── */
+:root[data-theme='light'] {
+  /* Accent: low = light purple surface, high = dark purple text */
+  --sl-color-accent-low: oklch(90.91% 0.0536 303.22);   /* kiro accent-100 */
+  --sl-color-accent: oklch(49.95% 0.213 295.09);        /* kiro accent-600 */
+  --sl-color-accent-high: oklch(34.63% 0.1446 296);     /* kiro accent-800 */
+
+  --sl-color-white: oklch(31.73% 0.0259 304.41);        /* kiro light text (headings) */
+  --sl-color-gray-1: oklch(36% 0.025 303);
+  --sl-color-gray-2: oklch(42% 0.02 301);               /* body text */
+  --sl-color-gray-3: oklch(45% 0.0182 300.94);          /* kiro light text-secondary */
+  --sl-color-gray-4: oklch(62% 0.02 300);
+  --sl-color-gray-5: oklch(82.82% 0.0115 302.85);       /* kiro light --kiro-muted */
+  --sl-color-gray-6: oklch(93.4% 0.0071 303.81);        /* kiro light --kiro-surface */
+  --sl-color-gray-7: oklch(96.5% 0.004 301);
+  --sl-color-black: oklch(95.98% 0.0042 300.72);        /* kiro light --kiro-base (page bg) */
+
+  --kiro-overlay: oklch(89.14% 0.0071 303.83);          /* kiro light --kiro-overlay */
+
+  /* Semantic hues — light: *-low becomes the pale background, *-high the dark text */
+  --sl-color-red-low: oklch(93% 0.04 22);
+  --sl-color-red: oklch(55% 0.15 24);
+  --sl-color-red-high: oklch(47.08% 0.1367 23.99);      /* kiro light error */
+  --sl-color-orange-low: oklch(94% 0.04 70);
+  --sl-color-orange: oklch(67.07% 0.1392 63.52);        /* kiro light warning */
+  --sl-color-orange-high: oklch(48% 0.11 63);
+  --sl-color-green-low: oklch(93% 0.05 156);
+  --sl-color-green: oklch(52.97% 0.0963 155.38);        /* kiro light success */
+  --sl-color-green-high: oklch(42% 0.09 155);
+  --sl-color-blue-low: oklch(93% 0.04 245);
+  --sl-color-blue: oklch(52% 0.1 247);
+  --sl-color-blue-high: oklch(50.99% 0.1053 247.85);    /* kiro light info */
+  --sl-color-purple-low: oklch(93% 0.04 300);
+  --sl-color-purple: oklch(49.95% 0.213 295.09);        /* kiro accent-600 */
+  --sl-color-purple-high: oklch(34.63% 0.1446 296);     /* kiro accent-800 */
+}
+
+/* ── Component tweaks ───────────────────────────────────────────────────── */
 
 /* A touch more breathing room inside lesson code blocks. */
 .sl-markdown-content pre {
   padding-block: 0.9rem;
+}
+
+/* Inline code reads as a kiro "overlay" chip rather than a flat gray box. */
+.sl-markdown-content :not(pre) > code {
+  background: var(--kiro-overlay);
 }
