@@ -44,3 +44,6 @@ $RECYCLE.BIN/
 # misc
 .vercel
 .netlify
+
+# sst
+.sst
