@@ -6,6 +6,7 @@ import starlightSidebarTopics from 'starlight-sidebar-topics';
 // If you deploy under a subpath (e.g. a Forgejo Pages project site rather than a
 // root domain), also set `site` and `base` here — see the README.
 export default defineConfig({
+  site: "https://kiro-hero.dev",
   integrations: [
     starlight({
       title: 'Zero to Kiro Hero',
