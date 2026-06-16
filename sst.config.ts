@@ -7,13 +7,16 @@ export default $config({
       removal: input?.stage === "production" ? "retain" : "remove",
       protect: ["production"].includes(input?.stage),
       home: "aws",
+      providers: {
+        cloudflare: true,
+      },
     };
   },
   async run() {
     new sst.aws.Astro("MyWeb", {
       domain: {
         name: "kiro-hero.dev",
-        dns: false,
+        dns: sst.cloudflare.dns(),
       },
     });
   },
