@@ -2,11 +2,13 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightSidebarTopics from 'starlight-sidebar-topics';
+import aws from 'astro-sst';
 
 // If you deploy under a subpath (e.g. a Forgejo Pages project site rather than a
 // root domain), also set `site` and `base` here — see the README.
 export default defineConfig({
   site: "https://kiro-hero.dev",
+  adapter: aws(),
   integrations: [
     starlight({
       title: 'Zero to Kiro Hero',

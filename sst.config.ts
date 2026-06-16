@@ -11,7 +11,10 @@ export default $config({
   },
   async run() {
     new sst.aws.Astro("MyWeb", {
-      domain: "kiro-hero.dev",
+      domain: {
+        name: "kiro-hero.dev",
+        dns: false,
+      },
     });
   },
 });
