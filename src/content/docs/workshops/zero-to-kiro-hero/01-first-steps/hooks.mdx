@@ -1,0 +1,242 @@
+---
+title: Agent Hooks
+description: Run commands automatically at points in the agent's lifecycle.
+sidebar:
+  order: 4
+---
+
+import { Tabs, TabItem, Steps, Aside, FileTree } from '@astrojs/starlight/components';
+
+Hooks run a command of your choosing at specific points in the agent's lifecycle —
+before a tool runs, after it runs, when you submit a prompt, or when the agent finishes
+a turn. They're how you wire the agent into your real workflow: run tests, format code,
+gather context, or enforce guardrails, all without asking. This lesson walks through the
+full set of events, then puts two of them to work.
+
+## The hook events
+
+There are five points in the agent's lifecycle where a hook can fire:
+
+| Event | When it fires | Notable behavior |
+| --- | --- | --- |
+| `agentSpawn` | When the agent starts up | `STDOUT` is added to the agent's context — good for loading startup info (e.g. `git status`, tool versions). |
+| `userPromptSubmit` | When you submit a prompt | `STDOUT` is added to the agent's context — good for injecting fresh context (e.g. the current date or git branch). |
+| `preToolUse` | Before a tool runs | Can **block** the tool: exit `2` and the `STDERR` is returned to the agent. Supports a `matcher`. |
+| `postToolUse` | After a tool runs | Has access to the tool's result. Runs after the fact — it can't block. Supports a `matcher`. |
+| `stop` | When the agent finishes a turn | Good for post-processing like tests, formatting, or cleanup. No `matcher`. |
+
+A few things to keep in mind:
+
+- **`matcher` only applies to `preToolUse` and `postToolUse`** — the other events aren't tied to a specific tool. A matcher can target a tool (`"write"`), a wildcard (`"fs_*"`), an MCP server (`"@git"`), or everything (`"*"`).
+- **Exit codes carry meaning.** Exit `0` is success; `preToolUse` treats exit `2` as a block. Any other exit code surfaces the hook's `STDERR` to you as a warning.
+- Each event maps to an **array** of hooks, so you can register more than one command per trigger.
+
+The rest of this lesson uses two of these: `stop` and `preToolUse`.
+
+## Create an agent for this lesson
+
+Hooks are defined *on an agent*, so you need a custom agent to attach them to — the
+built-in default agent can't carry them. If you haven't already, see
+[Custom Agents](../custom-agents/) for the full picture; here we'll just create a small
+one to experiment with.
+
+<Steps>
+
+1. Create a practice agent — no hooks yet, just a name and the tools it can use:
+
+   ```json title=".kiro/agents/tested.json"
+   {
+     "name": "tested",
+     "description": "A practice agent for trying out hooks.",
+     "tools": ["read", "write", "shell"],
+     "allowedTools": ["read", "write"]
+   }
+   ```
+
+2. Switch to it:
+
+   ```text
+   /agent tested
+   ```
+
+</Steps>
+
+## Set up a tiny project
+
+You need something for the tests to run against. Create two files and install pytest.
+
+```python title="calculator.py"
+def add(a, b):
+    return a + b
+```
+
+```python title="test_calculator.py"
+from calculator import add
+
+
+def test_add():
+    assert add(2, 3) == 5
+```
+
+Install pytest into your environment:
+
+```bash
+python -m pip install pytest
+```
+
+Confirm it works:
+
+```bash
+python -m pytest -q
+```
+
+You should see one passing test.
+
+## Exercise 1: run tests at the end of every turn
+
+The `stop` hook fires after the agent finishes a response. We'll point it at pytest so
+every turn ends with a fresh test run.
+
+<Steps>
+
+1. Add a `stop` hook to your agent config:
+
+   ```json title=".kiro/agents/tested.json" {6-10}
+   {
+     "name": "tested",
+     "description": "A practice agent for trying out hooks.",
+     "tools": ["read", "write", "shell"],
+     "allowedTools": ["read", "write"],
+     "hooks": {
+       "stop": [
+         { "command": "python -m pytest -q" }
+       ]
+     }
+   }
+   ```
+
+   Your project should now look like this:
+
+   <FileTree>
+   - calculator.py
+   - test_calculator.py
+   - .kiro/
+     - agents/
+       - tested.json
+   </FileTree>
+
+2. Reload the agent so it picks up the change, then confirm the hook is registered:
+
+   ```text
+   /agent tested
+   /hooks
+   ```
+
+   `/hooks` should list a `stop` hook running `python -m pytest -q`.
+
+3. Ask the agent to add a feature **with a test**:
+
+   ```text
+   Add a `subtract(a, b)` function to calculator.py and a test for it
+   in test_calculator.py.
+   ```
+
+   When the agent finishes, the `stop` hook runs pytest. The tests pass, so the hook is
+   quiet — but you'll see a brief status line telling you a hook ran.
+
+4. Now deliberately introduce a regression:
+
+   ```text
+   Change `add` so it returns `a - b` instead.
+   ```
+
+   This breaks `test_add`. When the turn ends, pytest exits non-zero and the failure is
+   surfaced to you as a warning. The hook just caught a regression the moment it happened.
+
+</Steps>
+
+<Aside type="tip" title="Why you only see output on failure">
+A `stop` hook is silent when the command succeeds (exit code 0) and surfaces `STDERR` as
+a warning when it fails. That asymmetry is exactly what you want: green is quiet, red
+gets your attention.
+</Aside>
+
+<Aside type="caution" title="Notification, not auto-fix">
+The `stop` hook's output is **not** fed back into the agent's context — it warns *you*,
+it doesn't prompt the agent to self-correct. After a failure you'd tell the agent to fix
+it. (Auto-correcting loops are a more advanced pattern.)
+</Aside>
+
+## Exercise 2: block edits to a protected file
+
+`preToolUse` runs *before* a tool executes. If the hook exits with code **2**, the tool
+is blocked and the hook's `STDERR` is handed back to the agent — so the agent sees the
+refusal and reports it. We'll use this to make a file off-limits.
+
+<Steps>
+
+1. Create a guard script that blocks writes touching a protected file:
+
+   ```python title=".kiro/hooks/guard.py"
+   import json
+   import sys
+
+   PROTECTED = "secrets.py"
+
+   event = json.load(sys.stdin)
+   tool_input = json.dumps(event.get("tool_input", {}))
+
+   if PROTECTED in tool_input:
+       sys.stderr.write(f"Blocked: '{PROTECTED}' is protected and must not be edited.\n")
+       sys.exit(2)
+
+   sys.exit(0)
+   ```
+
+   Kiro sends the hook a JSON event on STDIN that includes the tool's input (such as the
+   target file path). The script checks for the protected name and exits `2` to block.
+
+2. Add a `preToolUse` hook to `tested.json`. It matches the `write` tool and runs the
+   guard before any edit:
+
+   ```json title=".kiro/agents/tested.json" {9-14}
+   {
+     "name": "tested",
+     "description": "A practice agent for trying out hooks.",
+     "tools": ["read", "write", "shell"],
+     "allowedTools": ["read", "write"],
+     "hooks": {
+       "stop": [
+         { "command": "python -m pytest -q" }
+       ],
+       "preToolUse": [
+         { "matcher": "write", "command": "python .kiro/hooks/guard.py" }
+       ]
+     }
+   }
+   ```
+
+3. Create the file you're protecting:
+
+   ```python title="secrets.py"
+   API_KEY = "do-not-touch"
+   ```
+
+4. Reload the agent so it picks up the new hook (`/agent tested`), then ask it to edit
+   the protected file:
+
+   ```text
+   Add a comment to the top of secrets.py.
+   ```
+
+   The write is blocked before it happens. The agent receives the guard's message and
+   reports that it couldn't edit the file — while edits to any other file still work
+   normally.
+
+</Steps>
+
+<Aside type="tip" title="Two shapes of hook">
+Notice the contrast: the `stop` hook *reacts* to what already happened, while the
+`preToolUse` hook *enforces* a rule and can stop an action outright. Most automation you
+build will be one of these two shapes.
+</Aside>

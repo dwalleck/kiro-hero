@@ -1,0 +1,140 @@
+---
+title: Steering Files
+description: Give the agent persistent project context and watch it change the output.
+sidebar:
+  order: 3
+---
+
+import { Tabs, TabItem, Steps, Aside, FileTree } from '@astrojs/starlight/components';
+
+Steering files are markdown files that Kiro loads into context automatically, every
+session. They're how you give the agent durable knowledge about *your* project instead
+of repeating yourself in every prompt. Good things to put in a steering file:
+
+- **The purpose of the project** — what it does and who it's for.
+- **The technologies used** — language, frameworks, and key libraries.
+- **Organizational coding standards** — conventions that go beyond general language
+  style, like how your team handles errors, naming, or comments.
+
+Kiro's default agent loads any `.md` file under `.kiro/steering/` in your project (and
+`~/.kiro/steering/` for personal, machine-wide rules). No configuration needed — drop a
+file in, and it's part of every conversation.
+
+<Aside type="tip" title="Prose vs. rules">
+The best steering files read less like documentation and more like a checklist: *"Do
+this, not that."* Agents follow concrete, imperative rules far better than paragraphs of
+explanation. For anything specific, a short before/after **example** beats a description.
+</Aside>
+
+## Exercise: teach Kiro how you want comments written
+
+You'll generate the same code twice — once with no guidance, once with a steering file —
+and compare the comments.
+
+### 1. Generate code with no steering file
+
+<Steps>
+
+1. Start Kiro in an empty project directory.
+
+2. Ask the agent to write a commented Lambda function:
+
+   ```text
+   Write an AWS Lambda function in Python that resizes an image in S3.
+   Make sure the code is commented.
+   ```
+
+3. Read the generated comments closely.
+
+</Steps>
+
+<Aside title="What to notice">
+The comments are probably *over-explaining* — restating what the code obviously does
+(`# loop over the items`, `# return the result`). That's noise, not signal. Hold onto
+this output so you can compare it later.
+</Aside>
+
+### 2. Add a steering file
+
+We'll use a community rule set —
+[`self-explanatory-code-commenting.instructions.md`](https://github.com/github/awesome-copilot/blob/main/instructions/self-explanatory-code-commenting.instructions.md)
+from the `awesome-copilot` repo. Notice how it's written: terse, imperative, and full of
+**do-this-not-that** examples rather than prose.
+
+<Steps>
+
+1. Create the steering directory and pull the file into it:
+
+   <Tabs syncKey="os">
+     <TabItem label="macOS / Linux">
+       ```bash
+       mkdir -p .kiro/steering
+       curl -fsSL \
+         https://raw.githubusercontent.com/github/awesome-copilot/main/instructions/self-explanatory-code-commenting.instructions.md \
+         -o .kiro/steering/commenting.md
+       ```
+     </TabItem>
+     <TabItem label="Windows (PowerShell)">
+       ```powershell
+       New-Item -ItemType Directory -Force .kiro/steering
+       Invoke-WebRequest `
+         -Uri https://raw.githubusercontent.com/github/awesome-copilot/main/instructions/self-explanatory-code-commenting.instructions.md `
+         -OutFile .kiro/steering/commenting.md
+       ```
+     </TabItem>
+   </Tabs>
+
+   Your project should now look like this:
+
+   <FileTree>
+   - .kiro/
+     - steering/
+       - commenting.md
+   </FileTree>
+
+2. Open `commenting.md` and skim it. Note that it tells the agent what *not* to comment
+   and shows paired examples — that concreteness is what makes the agent change behavior.
+
+</Steps>
+
+<Aside type="note">
+Steering files are loaded when the agent starts. If Kiro was already running, exit and
+restart it so the new file gets picked up.
+</Aside>
+
+### 3. Confirm the file is loaded
+
+Restart Kiro, then run:
+
+```text
+/context show
+```
+
+You should see `commenting.md` listed under the agent's context files. If it isn't
+there, check that the file is directly under `.kiro/steering/` and ends in `.md`.
+
+### 4. Generate the code again
+
+<Steps>
+
+1. Give the agent the **exact same prompt** as before:
+
+   ```text
+   Write an AWS Lambda function in Python that resizes an image in S3.
+   Make sure the code is commented.
+   ```
+
+2. Compare the two results.
+
+</Steps>
+
+<Aside type="tip" title="What changed">
+The comments should now track the steering file's philosophy — explaining *why*
+something is done rather than narrating *what* every line does. Same model, same prompt;
+the only difference is the context you gave it. That's the point of steering files.
+</Aside>
+
+<Aside type="caution">
+Steering files sit in the context window on **every** turn, so keep them focused. One
+topic per file, and trim anything the agent doesn't actually need.
+</Aside>

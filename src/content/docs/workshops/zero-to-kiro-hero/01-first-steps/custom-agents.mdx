@@ -1,0 +1,136 @@
+---
+title: Custom Agents
+description: Define your own agent — its tools, permissions, context, and behavior.
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside, FileTree } from '@astrojs/starlight/components';
+
+An **agent** is the configuration that decides how Kiro behaves: which tools it can use,
+what it's allowed to do without asking, what context it starts with, and how it responds.
+Kiro ships with built-in agents (like `kiro_default`), but the moment you want to tailor
+any of that to your project, you create your own.
+
+Custom agents are the foundation for much of the rest of this workshop — hooks, scoped
+tool permissions, bundled context, and MCP servers are all configured *on an agent*. This
+lesson gets you comfortable creating and switching to one.
+
+## Where agents live
+
+An agent is a single JSON file. Kiro looks in two places:
+
+| Location | Scope | Path |
+| --- | --- | --- |
+| **Workspace** | This project only | `.kiro/agents/<name>.json` |
+| **Global** | Every project on your machine | `~/.kiro/agents/<name>.json` |
+
+The filename (without `.json`) becomes the agent's name. If a workspace agent and a global
+agent share a name, the workspace one wins.
+
+<Aside type="note" title="Why not just edit the default agent?">
+The built-in agents (`kiro_default`, `kiro_guide`, `kiro_planner`) can't be edited. To
+customize behavior you create your own agent — which is exactly what this lesson does.
+</Aside>
+
+## What's in an agent config
+
+A config can be as small as a name, or grow to cover tools, permissions, context, and
+integrations. The fields you'll use most:
+
+| Field | What it controls | Explored in |
+| --- | --- | --- |
+| `name` / `description` | Identity of the agent | — |
+| `prompt` | A system prompt defining the agent's expertise and style | — |
+| `tools` | Which tools the agent *can* use (`read`, `write`, `shell`, …) | this lesson |
+| `allowedTools` | Which tools run **without** an approval prompt | this lesson |
+| `toolsSettings` | Fine-grained limits (e.g. restrict `write` to certain paths) | this lesson |
+| `resources` | Files/skills always loaded into context | Steering Files |
+| `hooks` | Commands run at lifecycle points | Agent Hooks |
+| `mcpServers` | External tools via MCP | Going Further |
+
+You'll meet `hooks`, `resources`, and `mcpServers` in their own lessons — this one focuses
+on getting an agent created and understanding tools and permissions.
+
+## Create your first agent
+
+<Steps>
+
+1. Create a workspace agent with a name, a short prompt, and a small toolset:
+
+   ```json title=".kiro/agents/workshop.json"
+   {
+     "name": "workshop",
+     "description": "A practice agent for the workshop.",
+     "prompt": "You are a concise pair programmer helping with small Python exercises.",
+     "tools": ["read", "write", "shell"],
+     "allowedTools": ["read"]
+   }
+   ```
+
+   Your project now contains:
+
+   <FileTree>
+   - .kiro/
+     - agents/
+       - workshop.json
+   </FileTree>
+
+2. Switch to it from inside Kiro:
+
+   ```text
+   /agent workshop
+   ```
+
+   You're now talking to the `workshop` agent. Run `/agent` on its own to see the list of
+   available agents and which one is active.
+
+</Steps>
+
+## Tools vs. allowed tools
+
+These two fields are easy to confuse and worth pinning down:
+
+- **`tools`** — the agent's *capabilities*. If a tool isn't listed here, the agent can't
+  use it at all.
+- **`allowedTools`** — the subset that runs **without asking you** each time. Anything in
+  `tools` but not in `allowedTools` still works, but prompts for approval first.
+
+In the config above, the agent can read, write, and run shell commands, but only `read` is
+pre-approved — so it'll ask before writing a file or running a command. That's a sensible
+default: auto-approve the safe, read-only stuff and keep a human in the loop for changes.
+
+<Aside type="caution" title="Be deliberate about auto-approval">
+It's tempting to drop `write` and `shell` into `allowedTools` to stop the prompts. For a
+throwaway practice project that's fine, but in real work you'd instead **scope** them — for
+example, limit writes to your source directory:
+
+```json
+"toolsSettings": {
+  "write": { "allowedPaths": ["src/**"], "deniedPaths": ["**/.env"] }
+}
+```
+
+This keeps the convenience without handing the agent unrestricted write access.
+</Aside>
+
+## Other ways to create an agent
+
+You don't have to hand-write the JSON:
+
+- `/agent create` — an AI-assisted, interactive flow inside Kiro.
+- `kiro-cli agent create --name <name>` — scaffolds an example config from the terminal.
+
+However you create it, you can sanity-check the file with:
+
+```bash
+kiro-cli agent validate --path .kiro/agents/workshop.json
+```
+
+<Aside type="tip" title="Commit your workspace agents">
+Workspace agents live in `.kiro/agents/` and are part of your project. Commit them so the
+whole team gets the same tools, permissions, and hooks.
+</Aside>
+
+With an agent in place, you're ready for the lessons that build on it — starting with
+giving it persistent context through steering files.
