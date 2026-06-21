@@ -1,0 +1,262 @@
+---
+title: Agent Hooks
+description: Run commands or prompts automatically at points in the agent's lifecycle.
+sidebar:
+  order: 4
+---
+
+import { Tabs, TabItem, Steps, Aside, FileTree } from '@astrojs/starlight/components';
+import Mermaid from '../../../../../components/Mermaid.astro';
+
+Hooks fire automatically at specific points in the agent's lifecycle — when a session
+starts, before or after a tool runs, when you submit a prompt, when a file changes, or
+when the session ends. They're how you wire the agent into your real workflow: run tests,
+format code, gather context, or enforce guardrails, without asking. You define them once
+as standalone files in `.kiro/hooks/`, and they apply across the whole workspace.
+
+## Where hooks fire in the agent loop
+
+Each trigger corresponds to a moment in the loop below. The orange parallelograms are the
+points where your hooks can run.
+
+<Mermaid code={`flowchart TD
+    Start([Session starts]) --> H1[/"SessionStart"/]
+    H1 --> Prompt["You submit a prompt"]
+    Prompt --> H2[/"UserPromptSubmit — can block"/]
+    H2 --> Think["Agent reasons about the request"]
+    Think --> Decide{"Use a tool?"}
+    Decide -- yes --> H3[/"PreToolUse — can block"/]
+    H3 --> Tool["Tool runs"]
+    Tool --> H4[/"PostToolUse"/]
+    H4 --> FileOps{"Wrote to a file?"}
+    FileOps -- yes --> H5[/"PostFileCreate / PostFileSave / PostFileDelete"/]
+    H5 --> Think
+    FileOps -- no --> Think
+    Decide -- no --> Reply["Agent replies"]
+    Reply --> More{"Another prompt?"}
+    More -- yes --> Prompt
+    More -- no --> Ends([Session ends])
+    Ends --> H6[/"Stop"/]
+    classDef hook stroke:#f59e0b,stroke-width:2px;
+    class H1,H2,H3,H4,H5,H6 hook;`} />
+
+<Aside type="note" title="Spec tasks and manual hooks">
+Two triggers aren't shown above because they sit outside the prompt loop: `PreTaskExec` /
+`PostTaskExec` fire around spec task execution, and `Manual` fires only when you invoke it
+on demand.
+</Aside>
+
+## The hook file format
+
+Each hook file is a standalone `.kiro/hooks/<name>.json` with a versioned schema. One file
+can declare several hooks:
+
+```json title=".kiro/hooks/example.json"
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "lint-on-save",
+      "description": "Lint TypeScript after it's saved.",
+      "trigger": "PostFileSave",
+      "matcher": "\\.ts$",
+      "action": { "type": "command", "command": "npm run lint" },
+      "timeout": 30,
+      "enabled": true
+    }
+  ]
+}
+```
+
+| Field | Required | Default | Description |
+| --- | --- | --- | --- |
+| `name` | Yes | — | Identifier for the hook |
+| `description` | No | — | Documentation only |
+| `trigger` | Yes | — | When the hook fires (see below) |
+| `matcher` | No | always match | Regex filtering by tool name or file path |
+| `action` | Yes | — | `{ type: "command", command }` or `{ type: "agent", prompt }` |
+| `timeout` | No | `60` | Seconds; `0` disables. Ignored for agent actions |
+| `enabled` | No | `true` | Set `false` to disable without deleting |
+
+### Hook Trigger reference
+
+| Trigger | Fires when | Matcher matches | Can block? |
+| --- | --- | --- | --- |
+| `SessionStart` | Session begins | — | No |
+| `Stop` | Session ends | — | No |
+| `PreToolUse` | Before a tool runs | Tool name (regex) | Yes |
+| `PostToolUse` | After a tool runs | Tool name (regex) | No |
+| `PreTaskExec` | Before a spec task starts | — | Yes |
+| `PostTaskExec` | After a spec task finishes | — | No |
+| `UserPromptSubmit` | You submit a prompt | Prompt text | Yes |
+| `PostFileCreate` | After a file is created | File path (regex) | No |
+| `PostFileSave` | After a file is saved | File path (regex) | No |
+| `PostFileDelete` | After a file is deleted | File path (regex) | No |
+| `Manual` | You trigger it on demand | — | No |
+
+<Aside type="caution" title="`Stop` is once per session, not once per turn">
+`Stop` fires when the whole session ends — not after each agent turn. To react to each
+change the agent makes mid-session, use `PostFileSave` or `PostToolUse` instead, which is
+exactly what the first exercise does.
+</Aside>
+
+### Hook Action Types
+
+- **`command`** runs a shell command. It receives the hook context as JSON on **stdin**,
+  and its **exit code** carries meaning: `0` is success, and for blocking triggers
+  (`PreToolUse`, `UserPromptSubmit`) exit code **`2` blocks** the action and returns the
+  command's `STDERR` to the agent.
+- **`agent`** appends a prompt string to the model's context — no subprocess is spawned.
+  Use it for lightweight steering and guardrails.
+
+## Set up a tiny project
+
+You need something for the tests to run against. Create two files and install pytest.
+
+```python title="calculator.py"
+def add(a, b):
+    return a + b
+```
+
+```python title="test_calculator.py"
+from calculator import add
+
+
+def test_add():
+    assert add(2, 3) == 5
+```
+
+```bash
+python -m pip install pytest
+python -m pytest -q
+```
+
+You should see one passing test.
+
+## Exercise 1: run tests whenever the agent saves a file
+
+`PostFileSave` fires after a file is written. We'll match Python files and run pytest, so
+every edit the agent makes is checked the moment it lands.
+
+<Steps>
+
+1. Create the hook file:
+
+   ```json title=".kiro/hooks/tests.json"
+   {
+     "version": "v1",
+     "hooks": [
+       {
+         "name": "tests-on-save",
+         "description": "Run pytest after any Python file is saved.",
+         "trigger": "PostFileSave",
+         "matcher": "\\.py$",
+         "action": { "type": "command", "command": "python -m pytest -q" }
+       }
+     ]
+   }
+   ```
+
+   Your project should now look like this:
+
+   <FileTree>
+   - calculator.py
+   - test_calculator.py
+   - .kiro/
+     - hooks/
+       - tests.json
+   </FileTree>
+
+2. Restart Kiro so it loads the new hook file, then ask the agent to add a feature
+   **with a test**:
+
+   ```text
+   Add a `subtract(a, b)` function to calculator.py and a test for it
+   in test_calculator.py.
+   ```
+
+   As the agent saves each file, the hook runs pytest. The tests pass, so the hook stays
+   quiet.
+
+3. Now introduce a regression:
+
+   ```text
+   Change `add` so it returns `a - b` instead.
+   ```
+
+   When the agent saves the file, pytest exits non-zero and the failure is surfaced to
+   you — the hook caught the regression the moment it happened.
+
+</Steps>
+
+<Aside type="caution" title="Notification, not auto-fix">
+A `PostFileSave` hook can't block (it runs after the fact) and its job here is to *warn
+you*. After a failure you'd tell the agent to fix it. Auto-correcting loops are a more
+advanced pattern.
+</Aside>
+
+## Exercise 2: block edits to a protected file
+
+`PreToolUse` runs *before* a tool executes, and it can **block**. If the hook command exits
+with code `2`, the tool is stopped and the hook's `STDERR` is handed back to the agent — so
+the agent sees the refusal and reports it.
+
+<Steps>
+
+1. Create a guard script. It reads the hook context from stdin and blocks if a protected
+   file is involved:
+
+   ```python title=".kiro/hooks/guard.py"
+   import sys
+
+   PROTECTED = "secrets.py"
+
+   # The hook context arrives as JSON on stdin; we just scan the raw text for the
+   # protected filename rather than depending on a specific field name.
+   context = sys.stdin.read()
+
+   if PROTECTED in context:
+       sys.stderr.write(f"Blocked: '{PROTECTED}' is protected and must not be edited.\n")
+       sys.exit(2)
+
+   sys.exit(0)
+   ```
+
+2. Register a `PreToolUse` hook that matches the file-writing tools and runs the guard:
+
+   ```json title=".kiro/hooks/protect-secrets.json"
+   {
+     "version": "v1",
+     "hooks": [
+       {
+         "name": "protect-secrets",
+         "trigger": "PreToolUse",
+         "matcher": "fs_write|str_replace",
+         "action": { "type": "command", "command": "python .kiro/hooks/guard.py" }
+       }
+     ]
+   }
+   ```
+
+3. Create the file you're protecting:
+
+   ```python title="secrets.py"
+   API_KEY = "do-not-touch"
+   ```
+
+4. Restart Kiro to load the new hook, then ask the agent to edit the protected file:
+
+   ```text
+   Add a comment to the top of secrets.py.
+   ```
+
+   The write is blocked before it happens. The agent receives the guard's message and
+   reports that it couldn't edit the file — while edits to any other file still work.
+
+</Steps>
+
+<Aside type="tip" title="Two shapes of hook">
+Notice the contrast: the `PostFileSave` hook *reacts* to what already happened, while the
+`PreToolUse` hook *enforces* a rule and can stop an action outright. Most automation you
+build will be one of these two shapes.
+</Aside>

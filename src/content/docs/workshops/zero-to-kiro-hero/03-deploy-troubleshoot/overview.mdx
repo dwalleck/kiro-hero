@@ -1,0 +1,38 @@
+---
+title: 'Act 3 · Deploy & troubleshoot'
+description: Deploy the codebase, hit a latent bug you didn't write, and debug it with the agent.
+sidebar:
+  order: 1
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+**By the end of this act you can:** deploy a service, hit a failure you didn't
+write, and work backwards from the symptom to the cause using the agent. This is
+the integration test for everything in Acts 1 and 2.
+
+## The arc
+
+<Steps>
+
+1. **Deploy** the same codebase you changed in Act 2.
+
+2. **Hit the failure.** A latent bug — one you didn't author — surfaces only once
+   it's running.
+
+3. **Troubleshoot** from the symptom (a log line, a 500, a stack trace) back to the
+   cause, using the agent.
+
+</Steps>
+
+<Aside type="note" title="Why this lands">
+Because you already oriented in this codebase in Act 2, Act 3 is genuinely about
+agent-driven debugging under pressure — not re-comprehending everything from zero
+while also fighting a deploy failure.
+</Aside>
+
+<Aside type="caution" title="TODO — gated on the codebase decision">
+The specific latent bug (config/env mismatch, missing permission, serialization
+difference, timeout) is chosen with the app and deploy target. Keep it separate and
+latent so it doesn't contaminate Act 2.
+</Aside>

@@ -1,0 +1,161 @@
+---
+title: Custom Agents
+description: Define your own agent — its model, tools, permissions, context, and behavior.
+sidebar:
+  order: 5
+---
+
+import { Steps, Aside, FileTree } from '@astrojs/starlight/components';
+
+An **agent** is the configuration that decides how Kiro behaves: which model it uses,
+which tools it can reach, what it's allowed to do without asking, what context it starts
+with, and how it responds. Kiro ships with built-in agents, but the moment you want to
+tailor any of that to your project, you create your own.
+
+Custom agents are the foundation for much of the rest of this workshop — scoped tool
+permissions, bundled context, and MCP servers are all configured *on an agent*.
+
+## An agent is a Markdown file
+
+In v3 an agent profile is a **Markdown file with YAML frontmatter**. The frontmatter holds
+the configuration; the body of the document *is* the system prompt. (A JSON file with the
+same fields is equivalent — use Markdown when the prompt is long, JSON when generating
+configs programmatically.)
+
+```markdown title=".kiro/agents/workshop.md"
+---
+description: A practice agent for the workshop.
+model: claude-sonnet-4
+tools: [read, write, shell]
+permissions:
+  - capability: shell
+    effect: allow
+    match:
+      - "python *"
+      - "pytest *"
+welcomeMessage: "Ready to work on the workshop exercises."
+---
+
+You are a concise pair programmer helping with small Python exercises.
+Prefer the standard library. Write a test alongside any new function.
+```
+
+The name comes from the filename and the system prompt is the document body, so neither
+needs a frontmatter field. Everything else — model, tools, permissions, context — lives in
+the frontmatter.
+
+## Where agents live
+
+| Location | Scope | Loaded when |
+| --- | --- | --- |
+| `.kiro/agents/` | This workspace | The workspace is trusted |
+| `~/.kiro/agents/` | Every project on your machine | Always |
+
+The agent's **name is its path** relative to the agents directory, without the extension.
+Nested directories are supported, so `~/.kiro/agents/team/planner.md` is the agent
+`team/planner`.
+
+## The frontmatter fields
+
+| Field | What it controls | Explored in |
+| --- | --- | --- |
+| `description` | One-line summary of the agent | — |
+| `model` | Which model the agent runs on | this lesson |
+| `tools` | Tool **categories** the agent can use (tags) | this lesson |
+| `permissions` | What runs without asking, and what's denied | this lesson |
+| `resources` | Files/skills always loaded into context (`file://`, `skill://`) | Steering Files |
+| `mcpServers` | External tools via MCP, defined inline | Going Further |
+| `welcomeMessage` | Greeting shown when the agent starts | — |
+| *(document body)* | The system prompt | this lesson |
+
+## Tools are categories, not individual tools
+
+The `tools` field takes **category tags**. Each tag groups related capabilities, so you
+don't enumerate individual tools — and when new tools ship under a category, your agent
+picks them up automatically.
+
+| Tag | What it includes |
+| --- | --- |
+| `read` | File reading, directory listing, searching |
+| `write` | File writing, editing, deleting |
+| `shell` | Command execution and process management |
+| `web` | Web fetching |
+| `subagent` | Subagent delegation |
+| `knowledge` | Knowledge base tools |
+| `todo_list` | Task tracking |
+| `@mcp` | All MCP tools from your MCP config |
+| `@builtin` | All built-in tools |
+| `*` | Everything |
+
+## Tools vs. permissions
+
+These are two different questions, and separating them is the whole point of the model:
+
+- **`tools`** decides what the agent can *see* — its capabilities. If a category isn't
+  listed, the agent can't use those tools at all.
+- **`permissions`** decides what happens when it *uses* one — allowed silently, denied
+  outright, or paused to ask you.
+
+A permission rule has four parts: a `capability`, an `effect` (`allow`, `ask`, or `deny`),
+and optional `match` / `exclude` glob patterns.
+
+```yaml
+permissions:
+  - capability: shell
+    effect: allow
+    match:
+      - "python *"
+      - "pytest *"
+  - capability: filesystem
+    effect: deny
+    match:
+      - ".env"
+      - "secrets/**"
+```
+
+Two rules to remember:
+
+- **When no rule matches, the default is `ask`.** So the agent above runs `python`/`pytest`
+  without prompting, refuses anything touching `.env` or `secrets/`, and asks before any
+  other shell command or file operation.
+- **Effects resolve by restrictiveness: `deny` > `ask` > `allow`.** A more permissive rule
+  can never override a more restrictive one — so a `deny` always wins.
+
+<Aside type="tip" title="Workspace-wide permissions">
+Permissions can also live outside any agent, in `~/.kiro/settings/permissions.yaml`, where
+they apply across every agent. Those are stored per-user *outside* the repo, so a cloned
+repository can't grant itself trust. See the
+[permissions reference](https://kiro.dev/docs/cli/v3/permissions/) for the full model.
+</Aside>
+
+## Create your first agent
+
+<Steps>
+
+1. Create the agent file shown above at `.kiro/agents/workshop.md`. Your project now
+   contains:
+
+   <FileTree>
+   - .kiro/
+     - agents/
+       - workshop.md
+   </FileTree>
+
+2. Start Kiro and select your agent when prompted:
+
+   ```bash
+   kiro-cli
+   ```
+
+   The agent's name is `workshop` — the filename without its extension.
+
+</Steps>
+
+<Aside type="tip" title="Commit your workspace agents">
+Workspace agents live in `.kiro/agents/` and are part of your project. Commit them so the
+whole team gets the same model, tools, and permissions. (Note that *permissions trust* is
+still per-user and isn't granted just by cloning.)
+</Aside>
+
+With an agent in place, you're ready for the lessons that build on it — starting with
+giving it persistent context through steering files.

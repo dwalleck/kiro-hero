@@ -17,6 +17,7 @@
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "astro": "^6.4.7",
     "astro-sst": "3.1.4",
+    "mermaid": "^11.15.0",
     "sst": "4.15.2",
     "starlight-sidebar-topics": "^0.8.0"
   }

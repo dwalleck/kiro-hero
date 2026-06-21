@@ -1,0 +1,73 @@
+---
+/**
+ * Renders a Mermaid diagram on the client.
+ *
+ * Usage in MDX:
+ *   import Mermaid from '../../../../components/Mermaid.astro';
+ *   <Mermaid code={`flowchart TD; A-->B;`} />
+ *
+ * The diagram definition is passed as the `code` prop (a template-literal string
+ * keeps MDX from trying to parse arrows/brackets as JSX). Rendering happens in the
+ * browser so no headless-browser dependency is needed at build time. The theme
+ * follows Starlight's light/dark setting.
+ */
+interface Props {
+  code: string;
+}
+const { code } = Astro.props;
+---
+
+<figure class="mermaid-figure not-content">
+  <pre class="mermaid" set:text={code}></pre>
+</figure>
+
+<script>
+  import mermaid from 'mermaid';
+
+  function currentTheme(): 'dark' | 'default' {
+    const attr = document.documentElement.dataset.theme;
+    if (attr === 'dark' || attr === 'light') {
+      return attr === 'dark' ? 'dark' : 'default';
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default';
+  }
+
+  function renderMermaid() {
+    const nodes = document.querySelectorAll<HTMLElement>('pre.mermaid');
+    if (nodes.length === 0) return;
+
+    // Restore the original definition for any diagram already rendered, so a
+    // theme change can re-render it.
+    nodes.forEach((node) => {
+      if (node.dataset.source) {
+        node.textContent = node.dataset.source;
+      } else {
+        node.dataset.source = node.textContent ?? '';
+      }
+      node.removeAttribute('data-processed');
+    });
+
+    mermaid.initialize({ startOnLoad: false, theme: currentTheme() });
+    mermaid.run({ nodes: Array.from(nodes) });
+  }
+
+  renderMermaid();
+  // Re-render on Starlight client navigation and on theme toggle.
+  document.addEventListener('astro:after-swap', renderMermaid);
+  const observer = new MutationObserver(renderMermaid);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  });
+</script>
+
+<style>
+  .mermaid-figure {
+    margin: 1rem 0;
+    text-align: center;
+  }
+  .mermaid-figure :global(svg) {
+    max-width: 100%;
+    height: auto;
+  }
+</style>

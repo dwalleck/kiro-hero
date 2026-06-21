@@ -1,0 +1,106 @@
+---
+title: Authentication
+description: Sign in to Kiro from the IDE or CLI, including AWS IAM Identity Center.
+sidebar:
+  order: 4
+---
+
+import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+With Kiro installed, the last setup step is signing in. Kiro supports several
+providers. If youpick whichever your account or organization uses:
+
+- **GitHub** — sign in with your GitHub account.
+- **Google** — sign in with your Google credentials.
+- **AWS Builder ID** — quick setup for individual developers.
+- **AWS IAM Identity Center** — enterprise sign-in (see below).
+- **External identity provider** — your org's IdP, e.g. Microsoft Entra ID or Okta.
+
+<Aside type="note">
+Individual methods (GitHub, Google, Builder ID) aren't available in AWS GovCloud
+(US) regions — there you'll use IAM Identity Center or an external IdP.
+</Aside>
+
+<Tabs syncKey="kiro-surface">
+  <TabItem label="IDE">
+    <Steps>
+
+    1. On first launch, Kiro shows the sign-in screen. Choose your provider.
+
+    2. You're redirected to your browser to complete sign-in, then sent back to
+       Kiro automatically.
+
+    3. Once signed in, you'll land on the welcome page and can open a project.
+
+    </Steps>
+  </TabItem>
+  <TabItem label="CLI">
+    <Steps>
+
+    1. Start sign-in from your terminal:
+
+       ```bash
+       kiro-cli login
+       ```
+
+    2. Press **Enter** to open your browser, then choose your provider (Google,
+       GitHub, Builder ID, or your organization).
+
+    3. After authenticating, the browser directs you back to your terminal and
+       the CLI detects the login automatically.
+
+    4. Confirm who you're signed in as:
+
+       ```bash
+       kiro-cli whoami
+       ```
+
+       To sign out later, run `kiro-cli logout`.
+
+    </Steps>
+
+    <Aside type="tip" title="Signing in on a remote machine">
+    Over SSH, SSM, or in a container the CLI can't open a browser. Run
+    `kiro-cli login` and it shows a URL plus a one-time code — open the URL on
+    any device, enter the code, and the CLI detects the login. No port
+    forwarding required. (External IdP login isn't supported via device flow yet.)
+    </Aside>
+  </TabItem>
+</Tabs>
+
+## AWS IAM Identity Center
+
+If your organization uses IAM Identity Center, you'll need two things from your
+admin or help desk: a **Start URL** and the **Region** that hosts your identity
+directory.
+
+<Steps>
+
+1. Choose **Sign in with AWS IAM Identity Center**.
+
+   {/* SCREENSHOT: IDE/CLI provider selection with "AWS IAM Identity Center" highlighted.
+       Drop the image in src/assets/setup/ and replace this comment with an <Image /> import. */}
+
+2. In **Start URL**, enter the URL provided by your admin
+   (e.g. `https://my-org.awsapps.com/start`).
+
+   {/* SCREENSHOT: Start URL entry field filled in. */}
+
+3. In **Region**, enter the AWS Region hosting the identity directory, then
+   choose **Continue** and finish sign-in in your browser.
+
+   {/* SCREENSHOT: Region field + Continue button. */}
+
+</Steps>
+
+<Aside type="caution" title="AWS GovCloud (US)">
+A GovCloud Start URL contains `us-gov-home`, e.g.
+`https://start.us-gov-home.awsapps.com/directory/d-XXXXXXXXXX`. IAM Identity
+Center routing is automatic, but GovCloud requires **Kiro IDE 0.9.2+** or
+**Kiro CLI 1.25.0+**.
+</Aside>
+
+<Aside type="tip">
+Hitting browser-redirect or sign-in errors? See the
+[troubleshooting reference](../../reference/troubleshooting/) for common fixes.
+</Aside>

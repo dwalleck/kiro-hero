@@ -1,41 +1,88 @@
 ---
-title: Install Kiro
-description: Download and install the Kiro IDE on your platform.
+title: Install the CLI
+description: Download and install the Kiro CLI on your platform.
 sidebar:
-  order: 2
+  order: 3
 ---
 
 import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
 
-<Aside type="caution">
-The commands below are **placeholders**. Replace them with the current official
-Kiro install steps before running the workshop.
-</Aside>
-
 <Steps>
 
-1. Install Kiro for your platform.
+1. Install the Kiro CLI for your platform.
 
    <Tabs syncKey="os">
      <TabItem label="macOS">
+       Install natively at the command line:
+
        ```bash
-       brew install --cask kiro
+       curl -fsSL https://cli.kiro.dev/install | bash
        ```
-     </TabItem>
-     <TabItem label="Linux">
-       ```bash
-       curl -fsSL https://example.com/kiro/install.sh | sh
-       ```
+
+       <Aside type="note">
+       The official Kiro CLI binary is **not** available through Homebrew and
+       that path is not supported. Use the command above on macOS.
+       </Aside>
      </TabItem>
      <TabItem label="Windows (PowerShell)">
+       Open **Windows Terminal** (or any PowerShell terminal) and run:
+
        ```powershell
-       winget install Kiro.Kiro
+       irm 'https://cli.kiro.dev/install.ps1' | iex
+       ```
+
+       <Aside type="note">
+       Requires Windows 11. Run this in Windows Terminal or PowerShell — not
+       Command Prompt. Windows Terminal is recommended for the best terminal UI
+       experience.
+       </Aside>
+     </TabItem>
+     <TabItem label="Linux">
+       The install script is cross-platform. The same one-liner works on Linux
+       and installs the binary to `~/.local/bin`:
+
+       ```bash
+       curl -fsSL https://cli.kiro.dev/install | bash
+       ```
+
+       <Aside type="tip">
+       Make sure `~/.local/bin` is on your `PATH`. If `kiro-cli` isn't found
+       after install, add `export PATH="$HOME/.local/bin:$PATH"` to your shell
+       config.
+       </Aside>
+
+       **Alternatives**
+
+       Prefer a portable AppImage? Download it, make it executable, and run it:
+
+       ```bash
+       curl -fsSL -o kiro-cli.appimage \
+         https://desktop-release.q.us-east-1.amazonaws.com/latest/kiro-cli.appimage
+       chmod +x kiro-cli.appimage
+       ./kiro-cli.appimage
+       ```
+
+       On Ubuntu, you can install the `.deb` package instead:
+
+       ```bash
+       wget https://desktop-release.q.us-east-1.amazonaws.com/latest/kiro-cli.deb
+       sudo dpkg -i kiro-cli.deb
+       sudo apt-get install -f
+       kiro-cli
        ```
      </TabItem>
    </Tabs>
 
-2. Launch Kiro and sign in with your AWS credentials.
+2. Kiro will direct you to open your web browser to authenticate. Follow the
+   sign-in steps to connect your account.
 
-3. Continue to verification.
+3. Verify the install — you should be ready to start a chat session:
+
+   ```bash
+   kiro-cli doctor
+   ```
+
+   A healthy setup prints `Everything looks good!`. If something is off, follow
+   the prompts to resolve it. You're ready to start your first session.
 
 </Steps>
