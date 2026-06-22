@@ -8,16 +8,30 @@ sidebar:
 import { Tabs, TabItem, Steps, Aside, FileTree } from '@astrojs/starlight/components';
 import Mermaid from '../../../../../components/Mermaid.astro';
 
-Hooks fire automatically at specific points in the agent's lifecycle — when a session
-starts, before or after a tool runs, when you submit a prompt, when a file changes, or
-when the session ends. They're how you wire the agent into your real workflow: run tests,
-format code, gather context, or enforce guardrails, without asking. You define them once
-as standalone files in `.kiro/hooks/`, and they apply across the whole workspace.
+## The problem hooks solve
 
-## Where hooks fire in the agent loop
+Working with an agent, the same frustrations come up again and again:
 
-Each trigger corresponds to a moment in the loop below. The orange parallelograms are the
-points where your hooks can run.
+- **You find out too late that something broke.** The agent edits a few files, you keep
+  chatting, and several turns later you realise a change quietly broke the tests.
+- **The agent touches things it shouldn't.** There are files it has no business editing —
+  secrets, generated code, vendored libraries — and you end up watching every edit to
+  catch it.
+
+In both cases the thing you want is for something to happen *automatically*, at the right
+moment, without you having to remember to ask. That's exactly what a hook is: a command (or
+a prompt) that fires on its own at a specific point in the agent's lifecycle, so your
+workflow enforces itself.
+
+By the end of this lesson you'll have built the fix for both problems above. First, the
+definitions you need to get there.
+
+## What a hook is
+
+A hook ties an **action** to a **trigger** — a moment in the agent's lifecycle. You define
+hooks once as standalone files in `.kiro/hooks/`, and they apply across the whole
+workspace. The diagram below shows the loop; the orange parallelograms are the points where
+your hooks can run.
 
 <Mermaid code={`flowchart TD
     Start([Session starts]) --> H1[/"SessionStart"/]
@@ -46,7 +60,38 @@ Two triggers aren't shown above because they sit outside the prompt loop: `PreTa
 on demand.
 </Aside>
 
-## The hook file format
+### Trigger reference
+
+| Trigger | Fires when | Matcher matches | Can block? |
+| --- | --- | --- | --- |
+| `SessionStart` | Session begins | — | No |
+| `Stop` | Session ends | — | No |
+| `PreToolUse` | Before a tool runs | Tool name (regex) | Yes |
+| `PostToolUse` | After a tool runs | Tool name (regex) | No |
+| `PreTaskExec` | Before a spec task starts | — | Yes |
+| `PostTaskExec` | After a spec task finishes | — | No |
+| `UserPromptSubmit` | You submit a prompt | Prompt text | Yes |
+| `PostFileCreate` | After a file is created | File path (regex) | No |
+| `PostFileSave` | After a file is saved | File path (regex) | No |
+| `PostFileDelete` | After a file is deleted | File path (regex) | No |
+| `Manual` | You trigger it on demand | — | No |
+
+<Aside type="caution" title="`Stop` is once per session, not once per turn">
+`Stop` fires when the whole session ends — not after each agent turn. To react to each
+change the agent makes mid-session, use `PostFileSave` or `PostToolUse` instead, which is
+exactly what the first example does.
+</Aside>
+
+### Two kinds of action
+
+- **`command`** runs a shell command. It receives the hook context as JSON on **stdin**,
+  and its **exit code** carries meaning: `0` is success, and for blocking triggers
+  (`PreToolUse`, `UserPromptSubmit`) exit code **`2` blocks** the action and returns the
+  command's `STDERR` to the agent.
+- **`agent`** appends a prompt string to the model's context — no subprocess is spawned.
+  Use it for lightweight steering and guardrails.
+
+### The hook file format
 
 Each hook file is a standalone `.kiro/hooks/<name>.json` with a versioned schema. One file
 can declare several hooks:
@@ -72,46 +117,20 @@ can declare several hooks:
 | --- | --- | --- | --- |
 | `name` | Yes | — | Identifier for the hook |
 | `description` | No | — | Documentation only |
-| `trigger` | Yes | — | When the hook fires (see below) |
+| `trigger` | Yes | — | When the hook fires (see above) |
 | `matcher` | No | always match | Regex filtering by tool name or file path |
 | `action` | Yes | — | `{ type: "command", command }` or `{ type: "agent", prompt }` |
 | `timeout` | No | `60` | Seconds; `0` disables. Ignored for agent actions |
 | `enabled` | No | `true` | Set `false` to disable without deleting |
 
-### Hook Trigger reference
+## Putting hooks to work
 
-| Trigger | Fires when | Matcher matches | Can block? |
-| --- | --- | --- | --- |
-| `SessionStart` | Session begins | — | No |
-| `Stop` | Session ends | — | No |
-| `PreToolUse` | Before a tool runs | Tool name (regex) | Yes |
-| `PostToolUse` | After a tool runs | Tool name (regex) | No |
-| `PreTaskExec` | Before a spec task starts | — | Yes |
-| `PostTaskExec` | After a spec task finishes | — | No |
-| `UserPromptSubmit` | You submit a prompt | Prompt text | Yes |
-| `PostFileCreate` | After a file is created | File path (regex) | No |
-| `PostFileSave` | After a file is saved | File path (regex) | No |
-| `PostFileDelete` | After a file is deleted | File path (regex) | No |
-| `Manual` | You trigger it on demand | — | No |
+Now we'll build the fix for each problem from the top of the page. First, a tiny project to
+experiment on.
 
-<Aside type="caution" title="`Stop` is once per session, not once per turn">
-`Stop` fires when the whole session ends — not after each agent turn. To react to each
-change the agent makes mid-session, use `PostFileSave` or `PostToolUse` instead, which is
-exactly what the first exercise does.
-</Aside>
+### Set up a tiny project
 
-### Hook Action Types
-
-- **`command`** runs a shell command. It receives the hook context as JSON on **stdin**,
-  and its **exit code** carries meaning: `0` is success, and for blocking triggers
-  (`PreToolUse`, `UserPromptSubmit`) exit code **`2` blocks** the action and returns the
-  command's `STDERR` to the agent.
-- **`agent`** appends a prompt string to the model's context — no subprocess is spawned.
-  Use it for lightweight steering and guardrails.
-
-## Set up a tiny project
-
-You need something for the tests to run against. Create two files and install pytest.
+Create two files and install pytest.
 
 ```python title="calculator.py"
 def add(a, b):
@@ -133,10 +152,11 @@ python -m pytest -q
 
 You should see one passing test.
 
-## Exercise 1: run tests whenever the agent saves a file
+### Problem 1: catch regressions the moment they happen
 
-`PostFileSave` fires after a file is written. We'll match Python files and run pytest, so
-every edit the agent makes is checked the moment it lands.
+The first frustration was finding out too late that something broke. `PostFileSave` fires
+after a file is written, so we'll match Python files and run pytest on every edit the agent
+makes.
 
 <Steps>
 
@@ -185,7 +205,8 @@ every edit the agent makes is checked the moment it lands.
    ```
 
    When the agent saves the file, pytest exits non-zero and the failure is surfaced to
-   you — the hook caught the regression the moment it happened.
+   you — the hook caught the regression the moment it happened, instead of three turns
+   later.
 
 </Steps>
 
@@ -195,11 +216,12 @@ you*. After a failure you'd tell the agent to fix it. Auto-correcting loops are 
 advanced pattern.
 </Aside>
 
-## Exercise 2: block edits to a protected file
+### Problem 2: protect files the agent must not touch
 
-`PreToolUse` runs *before* a tool executes, and it can **block**. If the hook command exits
-with code `2`, the tool is stopped and the hook's `STDERR` is handed back to the agent — so
-the agent sees the refusal and reports it.
+The second frustration was the agent editing things it shouldn't. `PreToolUse` runs
+*before* a tool executes, and it can **block**: if the hook command exits with code `2`,
+the tool is stopped and the hook's `STDERR` is handed back to the agent, so it sees the
+refusal and reports it.
 
 <Steps>
 
@@ -256,7 +278,8 @@ the agent sees the refusal and reports it.
 </Steps>
 
 <Aside type="tip" title="Two shapes of hook">
-Notice the contrast: the `PostFileSave` hook *reacts* to what already happened, while the
-`PreToolUse` hook *enforces* a rule and can stop an action outright. Most automation you
-build will be one of these two shapes.
+Notice the contrast that maps back to the two problems: the `PostFileSave` hook *reacts* to
+what already happened (catching the regression), while the `PreToolUse` hook *enforces* a
+rule and can stop an action outright (protecting the file). Most automation you build will
+be one of these two shapes.
 </Aside>
