@@ -2,8 +2,10 @@
   "languages": {
     "typescript": {
       "name": "typescript-language-server",
-      "command": "typescript-language-server",
+      "command": "cmd",
       "args": [
+        "/c",
+        "typescript-language-server",
         "--stdio"
       ],
       "file_extensions": [
