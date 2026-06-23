@@ -20,5 +20,9 @@
     "mermaid": "^11.15.0",
     "sst": "4.15.2",
     "starlight-sidebar-topics": "^0.8.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "typescript": "^6.0.3"
   }
 }

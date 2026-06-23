@@ -12,8 +12,10 @@ import { Tabs, TabItem, Steps, Aside, FileTree } from '@astrojs/starlight/compon
 A steering file shapes the agent *for this project*, and a hook fires *at a moment in the
 loop*. But some knowledge is neither project-specific nor lifecycle-bound — it's a
 **reusable workflow** you want everywhere: how you review a PR, how you cut a release, how
-your team writes commit messages. Pasting that into every session is tedious, and baking it
-into a steering file means it loads on every turn whether it's relevant or not.
+your team writes commit messages. A steering file is the wrong home for it: even with
+`fileMatch`, steering keys off *which files are in your project*, and it doesn't travel
+beyond this repo. You want something that loads based on *what you're asking for* and that
+you can carry between projects and tools.
 
 A **skill** is that workflow packaged up so the agent can pull it in *only when it's
 relevant*. Skills follow the open [Agent Skills](https://agentskills.io) standard, so the
@@ -40,9 +42,22 @@ description: Review pull requests for code quality, security issues, and test co
 ```
 
 Skills use **progressive disclosure**: at startup Kiro reads only each skill's `name` and
-`description`. When your request matches a description, it loads the full body — so you get
-specialized knowledge on demand without bloating every prompt. A skill named `pr-review`
-also becomes the `/pr-review` slash command, letting you invoke it explicitly.
+`description` — a cheap summary that's always present. When your request matches a
+description, and only then, it loads the full body. So the agent knows the skill *exists*
+on every turn but pays for the detailed instructions only when they're relevant.
+
+This is the principle to hold onto, and it's worth contrasting with steering's `fileMatch`
+from the previous lesson. Both avoid loading context you aren't using, but they're not the
+same mechanism:
+
+- A steering `fileMatch` loads the **whole file in one stage**, triggered by **which files
+  are in your context** — a scoping rule keyed on your file tree.
+- A skill's progressive disclosure is **two stages** (summary always on, body on demand),
+  triggered by **what you're asking for** — the agent itself judges the match against the
+  description.
+
+A skill named `pr-review` also becomes the `/pr-review` slash command, letting you invoke it
+explicitly.
 
 ## Where skills live
 

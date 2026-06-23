@@ -60,26 +60,15 @@ Two triggers aren't shown above because they sit outside the prompt loop: `PreTa
 on demand.
 </Aside>
 
-### Trigger reference
-
-| Trigger | Fires when | Matcher matches | Can block? |
-| --- | --- | --- | --- |
-| `SessionStart` | Session begins | — | No |
-| `Stop` | Session ends | — | No |
-| `PreToolUse` | Before a tool runs | Tool name (regex) | Yes |
-| `PostToolUse` | After a tool runs | Tool name (regex) | No |
-| `PreTaskExec` | Before a spec task starts | — | Yes |
-| `PostTaskExec` | After a spec task finishes | — | No |
-| `UserPromptSubmit` | You submit a prompt | Prompt text | Yes |
-| `PostFileCreate` | After a file is created | File path (regex) | No |
-| `PostFileSave` | After a file is saved | File path (regex) | No |
-| `PostFileDelete` | After a file is deleted | File path (regex) | No |
-| `Manual` | You trigger it on demand | — | No |
+There are eleven triggers in all, each with its own matcher rules and blocking behavior.
+You don't need to memorise them to follow this lesson — the diagram above covers the ones
+we'll use. When you want the full table, matcher semantics, and exit-code behavior in one
+place, see the [hook trigger reference](../../reference/hook-triggers/) appendix.
 
 <Aside type="caution" title="`Stop` is once per session, not once per turn">
 `Stop` fires when the whole session ends — not after each agent turn. To react to each
 change the agent makes mid-session, use `PostFileSave` or `PostToolUse` instead, which is
-exactly what the first example does.
+exactly what the first hands-on example below shows.
 </Aside>
 
 ### Two kinds of action
@@ -151,6 +140,160 @@ python -m pytest -q
 ```
 
 You should see one passing test.
+
+### Warm-up: feed the agent your project's state
+
+Before fixing either problem, let's build the smallest *useful* hook — one you'll actually
+want to keep — and use it to see a hook fire for the first time.
+
+Here's a small pain you've probably already felt: when a session starts, the agent has no
+idea what branch you're on or whether your working tree is dirty. You end up telling it the
+same context every time. A `SessionStart` hook can hand it that state automatically, the
+moment the session begins.
+
+<Aside type="note" title="Why `SessionStart` is where output actually shows up">
+This is the key fact that decides where you can *see* a hook's output. A hook that exits
+`0` only has its STDOUT added to the agent's context for two triggers: `SessionStart` and
+`UserPromptSubmit`. For every other trigger — `PostFileSave`, `PostToolUse`, and the rest —
+STDOUT is **ignored**, and a successful hook looks completely silent. So `SessionStart` is
+both the most useful place to inject context *and* the easiest place to watch a hook work.
+</Aside>
+
+<Steps>
+
+1. Register a `SessionStart` hook that prints your git branch and a count of changed files.
+   Pick the tab for your shell:
+
+   <Tabs syncKey="shell">
+   <TabItem label="Linux / macOS (bash)">
+
+   ```json title=".kiro/hooks/project-state.json"
+   {
+     "version": "v1",
+     "hooks": [
+       {
+         "name": "inject-git-state",
+         "description": "Tell the agent the branch and dirty-file count at session start.",
+         "trigger": "SessionStart",
+         "action": {
+           "type": "command",
+           "command": "echo \"On branch $(git branch --show-current); $(git status --porcelain | wc -l | tr -d ' ') changed file(s).\""
+         }
+       }
+     ]
+   }
+   ```
+
+   </TabItem>
+   <TabItem label="Windows (PowerShell)">
+
+   ```json title=".kiro/hooks/project-state.json"
+   {
+     "version": "v1",
+     "hooks": [
+       {
+         "name": "inject-git-state",
+         "description": "Tell the agent the branch and dirty-file count at session start.",
+         "trigger": "SessionStart",
+         "action": {
+           "type": "command",
+           "command": "pwsh -Command \"$b = git branch --show-current; $n = (git status --porcelain | Measure-Object).Count; 'On branch ' + $b + '; ' + $n + ' changed file(s).'\""
+         }
+       }
+     ]
+   }
+   ```
+
+   Leading with `pwsh -Command` runs the hook in PowerShell no matter which shell Kiro
+   invokes hooks through, so it works the same whether the host shell is `cmd.exe` or
+   PowerShell. The message is built with single-quoted string concatenation, so the only
+   double quotes in the command are the ones wrapping the script — nothing extra to escape
+   inside the JSON.
+
+   </TabItem>
+   </Tabs>
+
+2. Restart Kiro so it loads the hook file. The restart fires `SessionStart`, the hook runs,
+   and its STDOUT is added to the agent's context before you type anything.
+
+3. Ask the agent what it already knows:
+
+   ```text
+   What branch am I on, and do I have uncommitted changes?
+   ```
+
+   It answers from the line your hook injected — without running a single tool. You've just
+   watched a hook fire *and* built something worth keeping: every future session now starts
+   with the agent already oriented.
+
+</Steps>
+
+<Aside type="tip" title="What to do with this hook">
+Unlike a throwaway experiment, this one earns its place. Leave `project-state.json` in
+`.kiro/hooks/` if you find it useful — it won't interfere with the examples below, which
+use different triggers or actions. You can extend the line later (last commit message,
+current directory, whatever context you keep repeating to the agent).
+</Aside>
+
+### A second shape of `SessionStart`: inject *fixed* instructions
+
+The warm-up hook ran a `command` to compute something fresh each session (your branch can
+change). But sometimes the thing you want to inject never changes — a standing instruction
+you'd otherwise paste at the start of every session. Spawning a subprocess just to `echo` a
+fixed string is wasteful, and that's exactly what the **`agent` action** is for: it appends
+a prompt string straight to the model's context, no shell involved.
+
+Here's a useful one. By default the agent just does the work; if you're using the workshop
+to *learn*, you want it to explain its choices as it goes. This hook turns on a teaching
+mode for every session.
+
+<Steps>
+
+1. Register a `SessionStart` hook with an `agent` action instead of a `command`:
+
+   ```json title=".kiro/hooks/explain-mode.json"
+   {
+     "version": "v1",
+     "hooks": [
+       {
+         "name": "explanatory-mode",
+         "description": "Ask the agent to teach as it works, every session.",
+         "trigger": "SessionStart",
+         "action": {
+           "type": "agent",
+           "prompt": "For this session, provide brief educational insights as you work. Before and after writing code, add a short note explaining the implementation choices you made, formatted as:\n\n\u2605 Insight\n[2-3 key points specific to this codebase or the code you just wrote]\n\nKeep insights focused and relevant rather than general programming advice, and put them in the conversation, not in the code. Don't wait until the end \u2014 explain as you go."
+         }
+       }
+     ]
+   }
+   ```
+
+   There's no `matcher` and no `timeout` here: `SessionStart` doesn't evaluate a matcher,
+   and `timeout` is ignored for `agent` actions because nothing is spawned.
+
+2. Restart Kiro so it loads the hook, then give it any coding task:
+
+   ```text
+   Add a `divide(a, b)` function to calculator.py that raises on division by zero.
+   ```
+
+   The agent does the work *and* explains its reasoning as it goes — the `★ Insight`
+   notes appear in the conversation without you ever asking for them. That instruction was
+   injected by the hook the moment the session began.
+
+</Steps>
+
+<Aside type="note" title="`command` injects data; `agent` injects intent">
+This is the distinction worth keeping. A `command` hook on `SessionStart` is for context
+that must be *computed* (branch, status, test results). An `agent` hook is for fixed
+*instructions* you want in effect every session. Reach for `agent` whenever you catch
+yourself pasting the same preamble into a fresh session.
+</Aside>
+
+<Aside type="tip" title="Turn it off when you're done learning">
+Set `"enabled": false` on the hook (or delete the file) once you no longer want the running
+commentary — for example when you move on to the next act.
+</Aside>
 
 ### Problem 1: catch regressions the moment they happen
 
@@ -277,9 +420,14 @@ refusal and reports it.
 
 </Steps>
 
-<Aside type="tip" title="Two shapes of hook">
-Notice the contrast that maps back to the two problems: the `PostFileSave` hook *reacts* to
-what already happened (catching the regression), while the `PreToolUse` hook *enforces* a
-rule and can stop an action outright (protecting the file). Most automation you build will
-be one of these two shapes.
+<Aside type="tip" title="The shapes of a hook">
+Step back and notice the shapes you've now built, because most automation you'll write is
+one of them:
+
+- **Inject** — a `SessionStart` hook hands the agent context (`command`, computed) or
+  standing instructions (`agent`, fixed) before you type.
+- **React** — the `PostFileSave` hook responds to something that already happened (catching
+  the regression).
+- **Enforce** — the `PreToolUse` hook applies a rule and can stop an action outright
+  (protecting the file).
 </Aside>

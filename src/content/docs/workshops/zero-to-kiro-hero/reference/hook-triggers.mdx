@@ -58,6 +58,7 @@ For `command` actions, the exit code carries meaning:
 <Aside type="note" title="Why a successful hook can look silent">
 Because a `0` exit only surfaces STDOUT for `SessionStart` and `UserPromptSubmit`, a
 successful `PostFileSave` or `PostToolUse` hook that just prints to stdout shows you
-*nothing*. To observe those triggers, write to a log file (as the lesson's warm-up does) or
-exit non-zero so the STDERR warning is shown.
+*nothing*. To observe those triggers, write to a log file or exit non-zero so the STDERR
+warning is shown. (The lesson's warm-up uses a `SessionStart` hook precisely because its
+STDOUT *is* surfaced.)
 </Aside>

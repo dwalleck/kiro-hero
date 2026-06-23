@@ -18,7 +18,45 @@ of repeating yourself in every prompt. Good things to put in a steering file:
 
 Kiro's default agent loads any `.md` file under `.kiro/steering/` in your project (and
 `~/.kiro/steering/` for personal, machine-wide rules). No configuration needed — drop a
-file in, and it's part of every conversation.
+file in, and by default it's part of every conversation.
+
+## When a steering file loads
+
+"Every conversation" is only the *default*. A steering file's YAML frontmatter has an
+`inclusion` field that controls **when** the file enters context — which matters because
+anything loaded on every turn costs context whether it's relevant or not.
+
+| `inclusion` | When the file loads | Use it for |
+| --- | --- | --- |
+| `always` (default) | Every turn of every session | Project-wide rules that always apply |
+| `fileMatch` | Only when a file matching `fileMatchPattern` is in context | Rules scoped to one part of the codebase |
+| `manual` | Only when you reference it with `#` in a prompt | Occasional context you pull in by hand |
+
+A `fileMatch` file declares the glob it reacts to:
+
+```markdown title=".kiro/steering/react-components.md"
+---
+inclusion: fileMatch
+fileMatchPattern: 'src/components/**/*.tsx'
+---
+
+# React component conventions
+
+- One component per file; name the file after the component.
+- Co-locate the test as `<Component>.test.tsx`.
+```
+
+That file stays out of context until you open or reference a matching `.tsx` file — then it
+loads, whole, automatically.
+
+<Aside type="note" title="`fileMatch` is conditional inclusion, not progressive disclosure">
+A `fileMatch` matcher loads the **entire file** the moment a matching path is in context —
+one stage, triggered by your file tree. That's different from a *skill's* progressive
+disclosure (covered later), where the agent always sees a short description and pulls in the
+full body only when your *request* matches. Same goal — don't pay for context you aren't
+using — reached two different ways: steering scopes by **which files you're touching**, a
+skill discloses by **what you're asking for**.
+</Aside>
 
 <Aside type="tip" title="Prose vs. rules">
 The best steering files read less like documentation and more like a checklist: *"Do
@@ -135,6 +173,9 @@ the only difference is the context you gave it. That's the point of steering fil
 </Aside>
 
 <Aside type="caution">
-Steering files sit in the context window on **every** turn, so keep them focused. One
-topic per file, and trim anything the agent doesn't actually need.
+An `always` steering file sits in the context window on **every** turn, so keep it focused.
+One topic per file, and trim anything the agent doesn't actually need. When a rule only
+applies to part of the codebase, reach for `fileMatch` instead of paying for it everywhere —
+and for a reusable *workflow* rather than project facts, a skill (coming up) loads only when
+your request calls for it.
 </Aside>
