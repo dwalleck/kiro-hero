@@ -1,0 +1,168 @@
+---
+title: Steering Files
+description: Give the agent persistent project context and watch it change the output.
+sidebar:
+  order: 3
+---
+
+import { Steps, Aside, FileTree } from '@astrojs/starlight/components';
+
+Steering files are markdown files that Kiro loads into context automatically, every
+session. They're how you give the agent durable knowledge about *your* project instead
+of repeating yourself in every prompt. Good things to put in a steering file:
+
+- **The purpose of the project** — what it does and who it's for.
+- **The technologies used** — language, frameworks, and key libraries.
+- **Organizational coding standards** — conventions that go beyond general language
+  style, like how your team handles money, errors, naming, or comments.
+
+Kiro's default agent loads any `.md` file under `.kiro/steering/` in your project (and
+`~/.kiro/steering/` for personal, machine-wide rules). No configuration needed — drop a
+file in, and by default it's part of every conversation.
+
+## When a steering file loads
+
+"Every conversation" is only the *default*. A steering file's YAML frontmatter has an
+`inclusion` field that controls **when** the file enters context — which matters because
+anything loaded on every turn costs context whether it's relevant or not.
+
+| `inclusion` | When the file loads | Use it for |
+| --- | --- | --- |
+| `always` (default) | Every turn of every session | Project-wide rules that always apply |
+| `fileMatch` | Only when a file matching `fileMatchPattern` is in context | Rules scoped to one part of the codebase |
+| `manual` | Only when you reference it with `#` in a prompt | Occasional context you pull in by hand |
+
+A `fileMatch` file declares the glob it reacts to:
+
+```markdown title=".kiro/steering/react-components.md"
+---
+inclusion: fileMatch
+fileMatchPattern: 'src/components/**/*.tsx'
+---
+
+# React component conventions
+
+- One component per file; name the file after the component.
+- Co-locate the test as `<Component>.test.tsx`.
+```
+
+That file stays out of context until you open or reference a matching `.tsx` file — then it
+loads, whole, automatically.
+
+<Aside type="note" title="`fileMatch` is conditional inclusion, not progressive disclosure">
+A `fileMatch` matcher loads the **entire file** the moment a matching path is in context —
+one stage, triggered by your file tree. That's different from a *skill's* progressive
+disclosure (covered later), where the agent always sees a short description and pulls in the
+full body only when your *request* matches. Same goal — don't pay for context you aren't
+using — reached two different ways: steering scopes by **which files you're touching**, a
+skill discloses by **what you're asking for**.
+</Aside>
+
+<Aside type="tip" title="Prose vs. rules">
+The best steering files read less like documentation and more like a checklist: *"Do
+this, not that."* Agents follow concrete, imperative rules far better than paragraphs of
+explanation. For anything specific, a short before/after **example** beats a description.
+</Aside>
+
+## Exercise: teach Kiro your money convention
+
+The budget tracker follows one firm rule throughout its code: **money is integer cents
+(`long`), never `decimal` or `float`, and every money value shown to a user goes through
+`Money.Format`** (see `Money.cs`). That's a *project* decision — nothing forces it, and the
+agent only follows it if it happens to notice. A steering file turns "happens to notice" into
+"always."
+
+### 1. Add a feature with no steering
+
+Open the budget tracker in Kiro and ask it to extend the summary:
+
+```text
+Add a GET /summary/by-category endpoint that returns each category
+and how much was spent in it this month.
+```
+
+Run it:
+
+```bash
+curl "http://localhost:5000/summary/by-category"
+```
+
+<Aside title="What to notice">
+Look at how the amounts come back. There's a real chance they *don't* match the rest of the
+app — raw cents like `60000`, a bare `decimal`, or some inline `ToString("C")` — instead of
+the `"$600.00"` strings `/transactions` and `/summary` return. The agent had a coin-flip at
+your convention, because it was never written down. *(If it happened to match — good. Read on:
+the point is turning that coin-flip into a guarantee.)*
+</Aside>
+
+### 2. Write the rule — in your own words
+
+**Don't paste a prepared file.** In one or two imperative sentences, write the convention the
+way *you'd* say it to a new teammate:
+
+```markdown title=".kiro/steering/money.md"
+# Money
+
+- All monetary amounts are integer **cents** (`long`). Never use `decimal`, `double`, or `float` for money.
+- Every money value returned from an API or shown to a user is formatted with `Money.Format`.
+```
+
+Keep it terse and imperative — "do this, not that" lands far better than a paragraph.
+
+<Aside type="note" title="`always`, on purpose">
+This rule applies anywhere money is touched, so it's an `always` file (the default) — it loads
+every turn. Contrast it with a rule scoped to one area, which belongs in a `fileMatch` file
+(above). One topic per file, and keep `always` files short: they cost context on *every* turn.
+</Aside>
+
+### 3. Predict, then regenerate
+
+Before you run anything: **what will change** in the `/summary/by-category` output once the
+rule is loaded? Say it out loud or jot it down.
+
+<Steps>
+
+1. Save the rule and restart Kiro so it loads.
+
+   <FileTree>
+   - .kiro/
+     - steering/
+       - money.md
+   </FileTree>
+
+2. Confirm it's in context:
+
+   ```text
+   /context show
+   ```
+
+   You should see `money.md` listed. If not, check it's directly under `.kiro/steering/` and ends in `.md`.
+
+3. Remove the previous attempt (delete the endpoint, clear the context) and ask for the
+   **exact same feature** again.
+
+</Steps>
+
+### 4. Compare against your prediction
+
+```bash
+curl "http://localhost:5000/summary/by-category"
+```
+
+<Aside type="tip" title="What changed">
+The amounts now come back as `"$600.00"` strings via `Money.Format`, consistent with the rest
+of the app — and you'll see the agent reach for `Money.Format` in its reasoning. Same model,
+same prompt; the only difference is the rule you gave it.
+</Aside>
+
+<Aside type="note" title="Checkpoint">
+Raise your hand when `/summary/by-category` returns money in the app's `$X.XX` style **and your
+prediction matched** (or you can explain why it didn't). You've made a convention the agent
+*reliably* follows — not one it might happen to notice.
+</Aside>
+
+<Aside type="caution" title="Steering shifts the odds; it doesn't enforce">
+A steering file makes the convention *far* more likely — but the model still writes the code,
+so it's not a guarantee. That's why the rule is short and concrete. This same money convention
+returns in Act 3, where a guardrail (a hook) can make part of it genuinely non-negotiable.
+</Aside>

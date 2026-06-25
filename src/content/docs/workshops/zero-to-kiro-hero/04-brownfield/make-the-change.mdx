@@ -1,0 +1,63 @@
+---
+title: Make the change
+description: Execute the plan, make the number honest, and prove it with the tests.
+sidebar:
+  order: 4
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+**Goal:** execute the plan, watch `/summary` drop from **$1,300** to the honest **$850**, and
+*prove* it — the test that should change does, the tests that shouldn't don't.
+
+## Execute against the plan
+
+<Aside type="tip" title="Your turn — hand the agent the plan, not a vibe">
+Give the agent the plan from the previous lesson and let it work the touch points one at a time:
+
+<Steps>
+
+1. **Schema + seed** (`Database.cs`) — add a `kind` to transactions (`Income` / `Expense` /
+   `Transfer`); mark the two transfer rows as `Transfer`.
+2. **Summary query** (`Program.cs`) — exclude `Transfer`, exclude pending, and sum *all* amounts
+   (not just negatives) so the refund nets out.
+3. **Transactions output** (`Program.cs`) — surface the new `kind`.
+4. **Tests** — update the summary expectation; leave the rest alone.
+
+</Steps>
+</Aside>
+
+## Prove it holds
+
+Run the suite:
+
+```bash
+dotnet test
+```
+
+<Aside type="note" title="What the done-signal should say">
+- `MoneyTests` and the `/transactions` count test — **still green** (you didn't break anything).
+- The `/summary` test — you changed its expectation from `130000` to `85000`, and it's green.
+- Add one new assertion that the total **excludes** the transfer, so the fix can't silently
+  regress later.
+
+A vibe-coded patch usually makes the obvious edit and turns one assertion green while quietly
+breaking another. The green-that-holds suite is how you *know* this change actually landed.
+</Aside>
+
+<Aside type="tip" title="Verify the number, the oracle way">
+Confirm independently — query the DB a different way (`sqlite3 budget.db`, the honest query from
+the app's README) and check it agrees: **$850**. Two methods agreeing is proof; one method is a
+hope.
+</Aside>
+
+<Aside type="note" title="Checkpoint">
+`/summary` returns **$850**, `dotnet test` is green, and you can show the transfer is excluded.
+`git checkout act3-done` is the finished solution if you fell behind.
+</Aside>
+
+<Aside type="tip" title="Stretch — close the loop to steering">
+Encode what you just decided as a steering rule (e.g. *"a transfer is never spending"*), start a
+fresh session, and ask for a related report. Watch the agent honor the rule unprompted — Act 1's
+steering, paying off on the code you just wrote.
+</Aside>

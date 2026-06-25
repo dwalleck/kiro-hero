@@ -64,7 +64,7 @@ Nested directories are supported, so `~/.kiro/agents/team/planner.md` is the age
 | `tools` | Tool **categories** the agent can use (tags) | this lesson |
 | `permissions` | What runs without asking, and what's denied | this lesson |
 | `resources` | Files/skills always loaded into context (`file://`, `skill://`) | Steering Files |
-| `mcpServers` | External tools via MCP, defined inline | Going Further |
+| `mcpServers` | External tools via MCP, defined inline | MCP Servers |
 | `welcomeMessage` | Greeting shown when the agent starts | — |
 | *(document body)* | The system prompt | this lesson |
 
@@ -157,5 +157,5 @@ whole team gets the same model, tools, and permissions. (Note that *permissions 
 still per-user and isn't granted just by cloning.)
 </Aside>
 
-With an agent in place, you're ready for the lessons that build on it — starting with
-giving it persistent context through steering files.
+With an agent in place, you can scope exactly what it reaches — next we hand it fresh
+external tools and knowledge through MCP servers.

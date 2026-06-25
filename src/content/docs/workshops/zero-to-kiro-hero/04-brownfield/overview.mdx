@@ -1,0 +1,44 @@
+---
+title: Overview
+description: Orient in a codebase you didn't write, then make one planned change that holds.
+sidebar:
+  order: 1
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+**By the end of this act you can:** drop into the budget tracker, use the agent to map how it
+works, and fix the bug from the cold open — *correctly*, and with a test that proves it.
+
+Remember the cold open: `/summary` confidently reported **$1,300** spent this month, and it was
+wrong. This is where you make it right — not by vibing a patch, but by orienting, planning, and
+executing a change that *holds*.
+
+## The arc
+
+<Steps>
+
+1. **Orient.** Use the agent to map the codebase — where "spent" is computed, and what feeds it.
+
+2. **Plan.** Turn that understanding into an explicit plan — *two ways* — before writing code.
+   This is where planning earns its keep and vibing quietly fails.
+
+3. **Make the change.** Execute against the plan. The honest number appears, the tests prove it,
+   and nothing else breaks.
+
+</Steps>
+
+<Aside type="note" title="The change: make `spent` honest">
+The cold open's $1,300 over-counts three ways: a **transfer** to your own savings, a **refund**,
+and a **pending** charge. Fixing the transfer means introducing a concept the code doesn't have
+yet — transactions are classified income-vs-expense only by the *sign* of the amount, with no
+notion of a **transfer**. You'll add that third kind to the closed set, then handle the refund
+and pending decisions the plan surfaces. Done right it threads through several places — schema,
+seed, the summary query, the API shape, and the tests. Vibing patches the one obvious spot and
+misses the rest; planning enumerates them first.
+</Aside>
+
+<Aside type="tip" title="Recovery">
+Lost? `git checkout act3-start` resets to the start of this act; `git checkout act3-done` jumps
+straight to the finished solution. Either lets you rejoin at the next checkpoint.
+</Aside>

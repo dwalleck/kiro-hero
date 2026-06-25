@@ -1,0 +1,60 @@
+---
+title: Get the Starter App
+description: Install the .NET SDK and clone the budget tracker you'll use all workshop.
+sidebar:
+  order: 5
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Everything from Act 0 on uses one small app — a .NET budget tracker. This step gets it onto
+your machine and confirms it runs, so the workshop itself can stay about Kiro, not setup.
+
+## 1. Install the .NET SDK
+
+<Steps>
+
+1. Install the **.NET 10 SDK** — [dotnet.microsoft.com/download/dotnet/10.0](https://dotnet.microsoft.com/download/dotnet/10.0).
+
+2. Verify it's on your PATH:
+
+   ```bash
+   dotnet --version
+   ```
+
+</Steps>
+
+## 2. Clone and run the app
+
+<Steps>
+
+1. Clone the starter repo:
+
+   ```bash
+   git clone https://github.com/dwalleck/kiro-hero-budget-tracker.git budget-tracker
+   cd budget-tracker
+   ```
+
+2. Run it once to confirm everything works:
+
+   ```bash
+   dotnet run --urls http://localhost:5000
+   ```
+
+3. In another terminal, check it responds:
+
+   ```bash
+   curl "http://localhost:5000/summary"
+   ```
+
+   You should get a JSON spending summary — something like:
+
+   ```json
+   { "month": "…", "totalSpent": "$1,300.00", "totalSpentCents": 130000 }
+   ```
+
+</Steps>
+
+<Aside type="note" title="Checkpoint">
+Everyone has `dotnet --version` working and the app responding on `http://localhost:5000`.
+</Aside>

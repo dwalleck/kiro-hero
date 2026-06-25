@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-import { Tabs, TabItem, Steps, Aside, FileTree } from '@astrojs/starlight/components';
+import { Steps, Aside, FileTree } from '@astrojs/starlight/components';
 
 ## The problem skills solve
 
@@ -72,116 +72,82 @@ agent loads skills from both locations automatically — custom agents must opt 
 
 ## Installing a skill
 
-You rarely write skills from scratch — most of the time you install one someone published.
-There are two ways to do it: the IDE's import flow, or the `skills` CLI.
-
-<Tabs>
-<TabItem label="In the IDE">
-
-The Kiro panel has an **Agent Steering & Skills** section where you view, manage, and import
-skills.
-
-<Steps>
-
-1. Open the **Agent Steering & Skills** section in the Kiro panel.
-
-2. Click **+** and choose **Import a skill**.
-
-3. Pick a source:
-   - **GitHub** — paste a URL pointing at the skill *folder* or directly at its `SKILL.md`.
-     The URL must point to a subdirectory, **not** the repository root.
-   - **Local folder** — import from somewhere on your filesystem.
-
-</Steps>
-
-The skill is copied into your skills directory and works immediately — no restart needed.
-
-</TabItem>
-<TabItem label="With the skills CLI">
-
-The open-standard `skills` CLI installs any skill from a Git repository:
+You rarely write skills from scratch — most of the time you install one someone published. The
+open-standard `skills` CLI does it from any Git repository:
 
 ```bash
-npx skills add <owner/repo>
+npx skills@latest add <owner/repo> -a kiro-cli
 ```
 
-If a repository bundles several skills, pick one with `--skill`:
+Two flags decide *where* it lands:
 
-```bash
-npx skills add <owner/repo> --skill <skill-name>
-```
+- **`-a kiro-cli`** — the target agent. **Don't omit this.** Run non-interactively, the CLI
+  defaults to a *different* agent (GitHub Copilot), and the files go where Kiro never sees them.
+  (`-a` is short for `--agent`.)
+- **`-g`** — install **globally**, into `~/.kiro/skills/` (available in every project), instead
+  of the workspace's `.kiro/skills/`. Use it for personal workflows you want everywhere.
 
-<Aside type="caution" title="Pass `-a kiro-cli` or it lands in the wrong place">
-The CLI supports many agents and, run non-interactively, defaults to a *different* one
-(GitHub Copilot). To install into Kiro's `.kiro/skills/` directory you **must** tell it the
-target agent:
+If a repo bundles several skills, add `--skill <name>` to pick one; omit it to install the whole
+set. To browse without leaving the terminal: `npx skills find <query>`.
 
-```bash
-npx skills add <owner/repo> -a kiro-cli
-```
-
-`-a` is short for `--agent`. Without it the files are written into another agent's folder
-and Kiro never sees the skill.
+<Aside type="note" title="The IDE can do this too">
+Prefer clicking? The Kiro panel's **Agent Steering & Skills** section has an **Import a skill**
+flow (paste a GitHub URL to the skill *folder*, or import a local folder). Same result — the CLI
+is just scriptable and explicit about the target.
 </Aside>
 
-Combine the flags as needed — for example, one named skill from a multi-skill repo, into Kiro:
+## Your turn — install the skill you'll use in Act 3
 
-```bash
-npx skills add <owner/repo> --skill pr-review -a kiro-cli
-```
-
-To discover skills without leaving the terminal:
-
-```bash
-npx skills find <query>
-```
-
-</TabItem>
-</Tabs>
-
-## Your turn
-
-Install the same skill both ways and confirm Kiro picks it up.
+You'll install **`grill-me-with-docs`** (part of Matt Pocock's skill set) now, and *use* it for
+real in Act 3 to plan a change to the budget tracker.
 
 <Steps>
 
-1. Using **either** method above, install a skill into this workspace. After a CLI install,
-   your project should contain the new folder:
+1. Install the set globally, targeting Kiro:
+
+   ```bash
+   npx skills@latest add mattpocock/skills -g -a kiro-cli
+   ```
+
+   `-g` puts it in `~/.kiro/skills/`, so it's available in every project — it's a workflow you'll
+   reuse, not a per-repo rule:
 
    <FileTree>
-   - .kiro/
+   - ~/.kiro/
      - skills/
-       - pr-review/
+       - grill-me-with-docs/
          - SKILL.md
+       - …other skills in the set
    </FileTree>
 
-2. Confirm Kiro loaded it. In a chat session, list what's in context:
+2. Confirm Kiro picked it up. In a chat session:
 
    ```bash
    > /context show
    ```
 
-   The skill should appear by name.
-
-3. Invoke it directly as a slash command:
-
-   ```bash
-   > /pr-review
-   ```
-
-   Kiro loads the full instructions and follows them — proof the package activated.
+   `grill-me-with-docs` should appear by name — at roughly 0.1% context, because only its
+   description is loaded until you actually call it. The `/grill-me-with-docs` slash command is
+   now available; **don't run it yet** — that's Act 3.
 
 </Steps>
 
-<Aside type="tip" title="Commit workspace skills">
-Skills in `.kiro/skills/` are part of the repo. Commit them so the whole team shares the
-same workflows — the same reasoning as committing workspace agents and steering files.
+<Aside type="note" title="Initialization comes later, in Act 3">
+These skills work *against* project docs (a `CONTEXT.md`, decision records). There's nothing to
+initialize here — you'll generate those docs with `/code init` in
+[Act 3 · Orient](../../04-brownfield/orient/), right where you first use `grill-me-with-docs`.
+</Aside>
+
+<Aside type="tip" title="Global vs. workspace — and committing">
+Because you used `-g`, this skill lives in `~/.kiro/skills/` (yours, every project) and is **not**
+part of the repo. To share a skill with your *team* instead, install it *without* `-g` so it lands
+in the project's `.kiro/skills/`, then commit it — same reasoning as committing steering files and
+agents.
 </Aside>
 
 ## Checkpoint
 
-You can now install a skill two ways — the IDE's **Import a skill** flow and
-`npx skills add ... -a kiro-cli` — explain why the `-a kiro-cli` flag matters, and verify a
-skill is live with `/context show` and its slash command. That rounds out the primitives:
-steering shapes the agent per project, hooks fire on lifecycle events, and skills bring in
-reusable workflows on demand.
+You can install a skill with `npx skills@latest add <owner/repo> -a kiro-cli`, explain why
+`-a kiro-cli` and `-g` matter, and confirm `grill-me-with-docs` is live with `/context show`. That
+rounds out the primitives: steering shapes the agent per project, hooks fire on lifecycle events,
+and skills bring in reusable workflows on demand — and you've got the one Act 3 needs.
