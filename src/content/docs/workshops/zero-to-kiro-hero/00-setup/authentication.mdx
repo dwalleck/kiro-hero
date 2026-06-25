@@ -23,11 +23,6 @@ providers, so pick whichever your account or organization uses:
 - **AWS IAM Identity Center**: enterprise sign-in (see below).
 - **External identity provider**: your org's IdP, e.g. Microsoft Entra ID or Okta.
 
-<Aside type="note">
-Individual methods (GitHub, Google, Builder ID) aren't available in AWS GovCloud
-(US) regions. There you'll use IAM Identity Center or an external IdP.
-</Aside>
-
 <Tabs syncKey="kiro-surface">
   <TabItem label="IDE">
     <Steps>
@@ -126,13 +121,6 @@ hosts your identity directory.
 
 Once you've finished signing in, you're sent back to Kiro. Return to step 3 of
 your flow above (the welcome page in the IDE, or `kiro-cli whoami` in the CLI).
-
-<Aside type="caution" title="AWS GovCloud (US)">
-A GovCloud Start URL contains `us-gov-home`, e.g.
-`https://start.us-gov-home.awsapps.com/directory/d-XXXXXXXXXX`. IAM Identity
-Center routing is automatic, but GovCloud requires **Kiro IDE 0.9.2+** or
-**Kiro CLI 1.25.0+**.
-</Aside>
 
 <Aside type="tip">
 Hitting browser-redirect or sign-in errors? See the
