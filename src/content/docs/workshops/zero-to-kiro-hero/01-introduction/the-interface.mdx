@@ -6,22 +6,51 @@ sidebar:
 ---
 
 import { Aside, FileTree } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import kiroMain from '../../../../../assets/interface/kiro-main.png';
+import kiroContext from '../../../../../assets/interface/kiro-context-menu.png';
+import kiroPowers from '../../../../../assets/interface/kiro-powers.png';
+import kiroFiles from '../../../../../assets/interface/kiro-files.png';
 
 A quick orientation before the build acts: the parts of Kiro you'll lean on, and where the things
 you configure live on disk.
 
 ## The panels
 
-You'll spend most of your time in three places:
+Here's the main Kiro window. Almost everything you'll touch in this workshop is one of the
+panels in that left sidebar.
 
-- **The agent panel**, where you chat with the agent and watch it work.
-- **The spec view**, where spec-driven requirements, design, and tasks show up.
-- **The file tree**, your project, including the `.kiro/` directory below.
+<Image src={kiroMain} alt="The Kiro IDE. The left sidebar lists Specs, Agent Hooks, Agent Steering & Skills (with entries like AGENTS, workshop-design, and code-testing-agent), and MCP Servers. The main area shows a 'Let's build' screen with Vibe and Spec cards and a chat box at the bottom." />
+
+- **The agent panel** is the chat box at the bottom. You describe a task and watch the agent
+  work. The **Vibe** and **Spec** cards are the two ways to start: chat and iterate, or plan first.
+- **Specs** is where spec-driven requirements, design, and tasks live. Act 3.
+- **Agent Hooks** is where commands fire automatically during the agent's turn. Act 2.
+- **Agent Steering & Skills** is the project knowledge and reusable workflows the agent loads. Act 1.
+- **MCP Servers** is where external tools connect. Act 2.
+
+That sidebar is the whole workshop in one column. Each section maps to a primitive you'll configure.
+
+### Giving the agent context with `#`
+
+When you want the agent to look at something specific, type `#` in the chat and pick it: a file,
+the terminal, a spec, your steering, an MCP server.
+
+<Image src={kiroContext} alt="The Kiro chat showing a '#' context menu that lists Files, Spec, Git Diff, Terminal, Problems, Folder, Current File, Steering, and MCP as things you can pull into the conversation." />
+
+### Powers
+
+Kiro bundles MCP servers and skills together as **Powers**. The Powers panel is a small
+marketplace: some bundles installed, more available to add. You'll meet Powers again in Act 2.
+
+<Image src={kiroPowers} alt="The Kiro Powers panel. Installed powers include Context7, AWS DevOps Agent, AWS Observability, and 'Build AWS infrastructure with CDK and CloudFormation'. Available powers include API Testing with Postman, AWS Transform, Design to Code with Figma, and Deploy web apps with Netlify." />
 
 ## The `.kiro` directory
 
 Everything you configure in Kiro lives under a `.kiro/` directory, organized by what it does. You'll
 create files in most of these subdirectories over the next three acts:
+
+<Image src={kiroFiles} alt="The Kiro file explorer showing a project's files, including a .kiro directory and an AGENTS.md file at the root, next to the editor's welcome screen." />
 
 <FileTree>
 - .kiro/
