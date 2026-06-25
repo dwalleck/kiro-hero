@@ -6,9 +6,16 @@ sidebar:
 ---
 
 import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import ideSignin from '../../../../../assets/setup/ide-signin.png';
+import cliLogin from '../../../../../assets/setup/cli-login.png';
+import signinProviders from '../../../../../assets/setup/signin-providers.png';
+import signinOrg from '../../../../../assets/setup/signin-org.png';
+import signinIdc from '../../../../../assets/setup/signin-idc.png';
+import signinSuccess from '../../../../../assets/setup/signin-success.png';
 
 With Kiro installed, the last setup step is signing in. Kiro supports several
-providers. If youpick whichever your account or organization uses:
+providers — pick whichever your account or organization uses:
 
 - **GitHub** — sign in with your GitHub account.
 - **Google** — sign in with your Google credentials.
@@ -25,12 +32,24 @@ Individual methods (GitHub, Google, Builder ID) aren't available in AWS GovCloud
   <TabItem label="IDE">
     <Steps>
 
-    1. On first launch, Kiro shows the sign-in screen. Choose your provider.
+    1. On first launch, Kiro shows its sign-in screen. Choose **Sign in**.
 
-    2. You're redirected to your browser to complete sign-in, then sent back to
-       Kiro automatically.
+       <Image src={ideSignin} alt="The Kiro IDE first-launch screen with the KIRO logo, the tagline 'An agentic IDE that helps you do your best work.', and a Sign in button." />
 
-    3. Once signed in, you'll land on the welcome page and can open a project.
+    2. Your browser opens to the **Choose a way to sign in/sign up** page — the
+       same chooser for every sign-in method. Pick your provider.
+
+       <Image src={signinProviders} alt="The Kiro web sign-in page titled 'Choose a way to sign in/sign up', listing Google, GitHub, Builder ID, and Your organization options." />
+
+       Using **IAM Identity Center**? Choose **Your organization** here, then
+       follow [AWS IAM Identity Center](#aws-iam-identity-center) below before
+       finishing this step.
+
+    3. Complete sign-in in the browser; it confirms you can close the tab and
+       sends you back to Kiro automatically. You'll land on the welcome page and
+       can open a project.
+
+       <Image src={signinSuccess} alt="The Kiro web sign-in success page showing the Kiro ghost logo and the text 'You can close this page now.'" />
 
     </Steps>
   </TabItem>
@@ -43,11 +62,22 @@ Individual methods (GitHub, Google, Builder ID) aren't available in AWS GovCloud
        kiro-cli login
        ```
 
+       <Image src={cliLogin} alt="A PowerShell terminal with the command kiro-cli login typed at the prompt." />
+
     2. Press **Enter** to open your browser, then choose your provider (Google,
        GitHub, Builder ID, or your organization).
 
+       <Image src={signinProviders} alt="The Kiro web sign-in page titled 'Choose a way to sign in/sign up', listing Google, GitHub, Builder ID, and Your organization options." />
+
+       Using **IAM Identity Center**? Choose **Your organization** here, then
+       follow [AWS IAM Identity Center](#aws-iam-identity-center) below before
+       finishing this step.
+
     3. After authenticating, the browser directs you back to your terminal and
-       the CLI detects the login automatically.
+       the CLI detects the login automatically. The browser tab confirms you can
+       close it.
+
+       <Image src={signinSuccess} alt="The Kiro web sign-in success page showing the Kiro ghost logo and the text 'You can close this page now.'" />
 
     4. Confirm who you're signed in as:
 
@@ -70,28 +100,32 @@ Individual methods (GitHub, Google, Builder ID) aren't available in AWS GovCloud
 
 ## AWS IAM Identity Center
 
-If your organization uses IAM Identity Center, you'll need two things from your
-admin or help desk: a **Start URL** and the **Region** that hosts your identity
-directory.
+This picks up from the **Choose a way to sign in/sign up** page — step 2 of either
+flow above, the browser page both the IDE and CLI open. Before you start, get two
+things from your admin or help desk: a **Start URL** and the **Region** that hosts
+your identity directory.
 
 <Steps>
 
-1. Choose **Sign in with AWS IAM Identity Center**.
+1. On that chooser, select **Your organization**.
 
-   {/* SCREENSHOT: IDE/CLI provider selection with "AWS IAM Identity Center" highlighted.
-       Drop the image in src/assets/setup/ and replace this comment with an <Image /> import. */}
+2. On **Sign in with your organization**, you can enter your work email to find
+   your organization — or, if you already have your Identity Center details,
+   choose **Sign in via IAM Identity Center instead**.
 
-2. In **Start URL**, enter the URL provided by your admin
-   (e.g. `https://my-org.awsapps.com/start`).
+   <Image src={signinOrg} alt="The 'Sign in with your organization' screen with a work-email field, a Continue button, and a 'Sign in via IAM Identity Center instead' link." />
 
-   {/* SCREENSHOT: Start URL entry field filled in. */}
+3. In **Start URL**, enter the URL provided by your admin
+   (e.g. `https://my-org.awsapps.com/start`). In **Region**, enter the AWS Region
+   hosting the identity directory, then choose **Continue** and finish sign-in in
+   your browser.
 
-3. In **Region**, enter the AWS Region hosting the identity directory, then
-   choose **Continue** and finish sign-in in your browser.
-
-   {/* SCREENSHOT: Region field + Continue button. */}
+   <Image src={signinIdc} alt="The 'Sign in with AWS IAM Identity Center' screen with Start URL and Region fields filled in and a Continue button." />
 
 </Steps>
+
+Once you've finished signing in, you're sent back to Kiro — return to step 3 of
+your flow above (the welcome page in the IDE, or `kiro-cli whoami` in the CLI).
 
 <Aside type="caution" title="AWS GovCloud (US)">
 A GovCloud Start URL contains `us-gov-home`, e.g.
