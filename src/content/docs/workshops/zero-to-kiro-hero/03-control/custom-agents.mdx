@@ -31,13 +31,13 @@ permissions:
   - capability: shell
     effect: allow
     match:
-      - "python *"
-      - "pytest *"
+      - "dotnet build *"
+      - "dotnet test *"
 welcomeMessage: "Ready to work on the workshop exercises."
 ---
 
-You are a concise pair programmer helping with small Python exercises.
-Prefer the standard library. Write a test alongside any new function.
+You are a concise pair programmer helping with small C# changes.
+Prefer the standard library. Write a test alongside any new method.
 ```
 
 The name comes from the filename and the system prompt is the document body, so neither
@@ -104,8 +104,8 @@ permissions:
   - capability: shell
     effect: allow
     match:
-      - "python *"
-      - "pytest *"
+      - "dotnet build *"
+      - "dotnet test *"
   - capability: filesystem
     effect: deny
     match:
@@ -115,7 +115,7 @@ permissions:
 
 Two rules to remember:
 
-- **When no rule matches, the default is `ask`.** So the agent above runs `python`/`pytest`
+- **When no rule matches, the default is `ask`.** So the agent above runs `dotnet build`/`dotnet test`
   without prompting, refuses anything touching `.env` or `secrets/`, and asks before any
   other shell command or file operation.
 - **Effects resolve by restrictiveness: `deny` > `ask` > `allow`.** A more permissive rule

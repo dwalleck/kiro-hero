@@ -90,11 +90,11 @@ can declare several hooks:
   "version": "v1",
   "hooks": [
     {
-      "name": "lint-on-save",
-      "description": "Lint TypeScript after it's saved.",
+      "name": "format-on-save",
+      "description": "Format C# after it's saved.",
       "trigger": "PostFileSave",
-      "matcher": "\\.ts$",
-      "action": { "type": "command", "command": "npm run lint" },
+      "matcher": "\\.cs$",
+      "action": { "type": "command", "command": "dotnet format" },
       "timeout": 30,
       "enabled": true
     }
@@ -114,32 +114,18 @@ can declare several hooks:
 
 ## Putting hooks to work
 
-Now we'll build the fix for each problem from the top of the page. First, a tiny project to
-experiment on.
+Now we'll build the fix for each problem from the top of the page, right in the budget tracker
+you've been working in.
 
-### Set up a tiny project
+### Make sure the tests run
 
-Create two files and install pytest.
-
-```python title="calculator.py"
-def add(a, b):
-    return a + b
-```
-
-```python title="test_calculator.py"
-from calculator import add
-
-
-def test_add():
-    assert add(2, 3) == 5
-```
+The budget tracker already ships with a test suite. From the project root, confirm it's green:
 
 ```bash
-python -m pip install pytest
-python -m pytest -q
+dotnet test
 ```
 
-You should see one passing test.
+You should see every test pass. That's the safety net the first hook will watch.
 
 ### Warm-up: feed the agent your project's state
 
@@ -274,7 +260,7 @@ mode for every session.
 2. Restart Kiro so it loads the hook, then give it any coding task:
 
    ```text
-   Add a `divide(a, b)` function to calculator.py that raises on division by zero.
+   Add a `/health` endpoint to `Program.cs` that returns the text "ok".
    ```
 
    The agent does the work *and* explains its reasoning as it goes. The `★ Insight`
@@ -298,7 +284,7 @@ commentary, for example when you move on to the next act.
 ### Problem 1: catch regressions the moment they happen
 
 The first frustration was finding out too late that something broke. `PostFileSave` fires
-after a file is written, so we'll match Python files and run pytest on every edit the agent
+after a file is written, so we'll match C# files and run `dotnet test` on every edit the agent
 makes.
 
 <Steps>
@@ -311,45 +297,43 @@ makes.
      "hooks": [
        {
          "name": "tests-on-save",
-         "description": "Run pytest after any Python file is saved.",
+         "description": "Run the test suite after any C# file is saved.",
          "trigger": "PostFileSave",
-         "matcher": "\\.py$",
-         "action": { "type": "command", "command": "python -m pytest -q" }
+         "matcher": "\\.cs$",
+         "action": { "type": "command", "command": "dotnet test" }
        }
      ]
    }
    ```
 
-   Your project should now look like this:
+   The hooks live alongside the app:
 
    <FileTree>
-   - calculator.py
-   - test_calculator.py
+   - Program.cs
+   - Money.cs
    - .kiro/
      - hooks/
        - tests.json
    </FileTree>
 
-2. Restart Kiro so it loads the new hook file, then ask the agent to add a feature
-   **with a test**:
+2. Restart Kiro so it loads the new hook file, then ask the agent for a normal edit:
 
    ```text
-   Add a `subtract(a, b)` function to calculator.py and a test for it
-   in test_calculator.py.
+   Add a short doc comment above the Money.Format method.
    ```
 
-   As the agent saves each file, the hook runs pytest. The tests pass, so the hook stays
+   As the agent saves the file, the hook runs `dotnet test`. The tests pass, so the hook stays
    quiet.
 
 3. Now introduce a regression:
 
    ```text
-   Change `add` so it returns `a - b` instead.
+   In Money.cs, change Format so it drops the cents and returns whole dollars.
    ```
 
-   When the agent saves the file, pytest exits non-zero and the failure is surfaced to
-   you. The hook caught the regression the moment it happened, instead of three turns
-   later.
+   When the agent saves the file, `dotnet test` exits non-zero (the `Money.Format` tests fail)
+   and the failure is surfaced to you. The hook caught the regression the moment it happened,
+   instead of three turns later.
 
 </Steps>
 
@@ -366,57 +350,71 @@ The second frustration was the agent editing things it shouldn't. `PreToolUse` r
 the tool is stopped and the hook's `STDERR` is handed back to the agent, so it sees the
 refusal and reports it.
 
+A good target in a .NET project is the `.csproj` file. Agents love to hand-edit package
+versions in it, when the right move is to run `dotnet add package` so the CLI resolves a real,
+current version. Let's make direct edits to `BudgetTracker.csproj` impossible.
+
 <Steps>
 
-1. Create a guard script. It reads the hook context from stdin and blocks if a protected
-   file is involved:
+1. Register a `PreToolUse` hook on the file-writing tools. Its command reads the hook context
+   on stdin and exits `2` (which blocks) if the change touches `BudgetTracker.csproj`, handing
+   the agent a message that points it at the CLI instead:
 
-   ```python title=".kiro/hooks/guard.py"
-   import sys
+   <Tabs syncKey="shell">
+   <TabItem label="Linux / macOS (bash)">
 
-   PROTECTED = "secrets.py"
-
-   # The hook context arrives as JSON on stdin; we just scan the raw text for the
-   # protected filename rather than depending on a specific field name.
-   context = sys.stdin.read()
-
-   if PROTECTED in context:
-       sys.stderr.write(f"Blocked: '{PROTECTED}' is protected and must not be edited.\n")
-       sys.exit(2)
-
-   sys.exit(0)
-   ```
-
-2. Register a `PreToolUse` hook that matches the file-writing tools and runs the guard:
-
-   ```json title=".kiro/hooks/protect-secrets.json"
+   ```json title=".kiro/hooks/protect-csproj.json"
    {
      "version": "v1",
      "hooks": [
        {
-         "name": "protect-secrets",
+         "name": "protect-csproj",
          "trigger": "PreToolUse",
          "matcher": "fs_write|str_replace",
-         "action": { "type": "command", "command": "python .kiro/hooks/guard.py" }
+         "action": {
+           "type": "command",
+           "command": "bash -c 'grep -q \"BudgetTracker.csproj\" && { echo \"Blocked: change the project file with the dotnet CLI (dotnet add package, dotnet add reference), not by editing it directly.\" >&2; exit 2; }; exit 0'"
+         }
        }
      ]
    }
    ```
 
-3. Create the file you're protecting:
+   </TabItem>
+   <TabItem label="Windows (PowerShell)">
 
-   ```python title="secrets.py"
-   API_KEY = "do-not-touch"
+   ```json title=".kiro/hooks/protect-csproj.json"
+   {
+     "version": "v1",
+     "hooks": [
+       {
+         "name": "protect-csproj",
+         "trigger": "PreToolUse",
+         "matcher": "fs_write|str_replace",
+         "action": {
+           "type": "command",
+           "command": "pwsh -Command \"if ([Console]::In.ReadToEnd() -match 'BudgetTracker.csproj') { [Console]::Error.WriteLine('Blocked: change the project file with the dotnet CLI (dotnet add package, dotnet add reference), not by editing it directly.'); exit 2 }; exit 0\""
+         }
+       }
+     ]
+   }
    ```
 
-4. Restart Kiro to load the new hook, then ask the agent to edit the protected file:
+   </TabItem>
+   </Tabs>
+
+   The guard scans the raw stdin context for the filename rather than depending on a specific
+   field name. That keeps it short and robust.
+
+2. Restart Kiro to load the new hook, then ask the agent to edit the project file directly:
 
    ```text
-   Add a comment to the top of secrets.py.
+   Add a comment to the top of BudgetTracker.csproj.
    ```
 
-   The write is blocked before it happens. The agent receives the guard's message and
-   reports that it couldn't edit the file, while edits to any other file still work.
+   The write is blocked before it happens. The agent gets the guard's message and reports that
+   it can't edit the project file directly, while edits to any other file still work. That's the
+   one thing it doesn't get an opinion about.
 
 </Steps>
 

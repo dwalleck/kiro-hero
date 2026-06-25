@@ -34,19 +34,19 @@ anything loaded on every turn costs context whether it's relevant or not.
 
 A `fileMatch` file declares the glob it reacts to:
 
-```markdown title=".kiro/steering/react-components.md"
+```markdown title=".kiro/steering/test-conventions.md"
 ---
 inclusion: fileMatch
-fileMatchPattern: 'src/components/**/*.tsx'
+fileMatchPattern: '**/*.Tests.cs'
 ---
 
-# React component conventions
+# Test conventions
 
-- One component per file; name the file after the component.
-- Co-locate the test as `<Component>.test.tsx`.
+- Name the test class after the class under test, like `MoneyTests`.
+- Use Arrange-Act-Assert, with one descriptive method per case.
 ```
 
-That file stays out of context until you open or reference a matching `.tsx` file. Then it
+That file stays out of context until you open or reference a matching `*.Tests.cs` file. Then it
 loads, whole, automatically.
 
 <Aside type="note" title="`fileMatch` is conditional inclusion, not progressive disclosure">
