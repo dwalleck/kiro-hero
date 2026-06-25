@@ -46,14 +46,14 @@ the frontmatter.
 
 ## Where agents live
 
-| Location | Scope | Loaded when |
-| --- | --- | --- |
-| `.kiro/agents/` | This workspace | The workspace is trusted |
-| `~/.kiro/agents/` | Every project on your machine | Always |
+Agents follow the same project-vs-global split as the rest of the
+[`.kiro` directory](../../01-introduction/the-interface/): `.kiro/agents/` for this project, or
+`~/.kiro/agents/` for every project on your machine, with the project copy winning a name clash.
+One agent-specific wrinkle: a project agent loads only once you've **trusted the workspace**, while
+global agents are always available.
 
-The agent's **name is its path** relative to the agents directory, without the extension.
-Nested directories are supported, so `~/.kiro/agents/team/planner.md` is the agent
-`team/planner`.
+The agent's **name is its path** relative to the agents directory, without the extension. Nested
+directories are supported, so `~/.kiro/agents/team/planner.md` is the agent `team/planner`.
 
 ## The frontmatter fields
 

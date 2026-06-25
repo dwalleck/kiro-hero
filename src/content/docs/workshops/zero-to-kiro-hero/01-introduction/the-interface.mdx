@@ -1,15 +1,60 @@
 ---
 title: The Interface
-description: A tour of the panels you'll use throughout the workshop.
+description: Orient to Kiro — the panels you'll use, and the .kiro directory where everything you configure lives.
 sidebar:
   order: 2
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, FileTree } from '@astrojs/starlight/components';
 
-A quick orientation to the parts of Kiro you'll lean on: the agent panel, the spec
-view, and the file tree.
+A quick orientation before the build acts: the parts of Kiro you'll lean on, and where the things
+you configure live on disk.
 
-<Aside>
-Keep this page short. Learners reference it while doing the later build lessons.
+## The panels
+
+You'll spend most of your time in three places:
+
+- **The agent panel**, where you chat with the agent and watch it work.
+- **The spec view**, where spec-driven requirements, design, and tasks show up.
+- **The file tree**, your project, including the `.kiro/` directory below.
+
+## The `.kiro` directory
+
+Everything you configure in Kiro lives under a `.kiro/` directory, organized by what it does. You'll
+create files in most of these subdirectories over the next three acts:
+
+<FileTree>
+- .kiro/
+  - steering/
+  - skills/
+  - hooks/
+  - agents/
+  - specs/
+  - settings/
+</FileTree>
+
+| Subdirectory | What lives there | Covered in |
+| --- | --- | --- |
+| `steering/` | Project knowledge and conventions the agent should follow | Act 1 |
+| `skills/` | Reusable workflows the agent pulls in on demand | Act 1 |
+| `hooks/` | Commands or prompts that fire at points in the agent's lifecycle | Act 2 |
+| `agents/` | Custom agent profiles: model, tools, permissions, context | Act 2 |
+| `specs/` | Spec-mode documents (requirements, design, tasks) | Act 3 |
+| `settings/` | Permissions and other configuration | Act 2 |
+
+### Global vs. project, and which one wins
+
+Every one of these exists in two places:
+
+- **Project** (`<your-project>/.kiro/`) applies to this repo only. It's committed with the code, so
+  your whole team gets it.
+- **Global** (`~/.kiro/`) applies to every project on your machine. It's your personal setup.
+
+When both define the same thing, like a steering file, skill, or agent with the same name, **the
+project version wins**. A project file overrides the global one. The default agent reads from both
+locations, with the project copy taking precedence.
+
+<Aside type="note">
+Each build lesson tells you which subdirectory it uses. When you're unsure about project vs. global,
+or what overrides what, this is the page to come back to.
 </Aside>

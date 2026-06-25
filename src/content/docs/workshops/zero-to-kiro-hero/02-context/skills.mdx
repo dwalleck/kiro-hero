@@ -61,13 +61,10 @@ explicitly.
 
 ## Where skills live
 
-| Location | Scope | Use case |
-| --- | --- | --- |
-| `.kiro/skills/` | This workspace | Project-specific workflows, team conventions |
-| `~/.kiro/skills/` | Every project on your machine | Personal workflows you use everywhere |
-
-When a workspace skill and a global skill share a name, the workspace one wins. The default
-agent loads skills from both locations automatically. Custom agents must opt in via their
+Skills follow the same project-vs-global split as the rest of the
+[`.kiro` directory](../../01-introduction/the-interface/): `.kiro/skills/` for this project, or
+`~/.kiro/skills/` for every project on your machine, with the project copy winning a name clash.
+The default agent loads skills from both automatically. Custom agents must opt in via their
 `resources` field (covered in *Custom Agents*).
 
 ## Installing a skill
