@@ -6,6 +6,8 @@ sidebar:
 ---
 
 import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+import dashboard from '../../../../../assets/setup/dashboard.png';
 
 Everything from Act 0 on uses one small app, a .NET budget tracker. This step gets it onto
 your machine and confirms it runs, so the workshop itself can stay about Kiro, not setup.
@@ -74,17 +76,10 @@ needs. `dotnet` then refuses any mismatched SDK, so you can't accidentally end u
    dotnet run --urls http://localhost:5000
    ```
 
-3. In another terminal, check it responds:
+3. Open [http://localhost:5000](http://localhost:5000) in your browser. You should see the
+   dashboard: this month's spending up top, with the seeded transactions below it.
 
-   ```bash
-   curl "http://localhost:5000/summary"
-   ```
-
-   You should get a JSON spending summary, something like this:
-
-   ```json
-   { "month": "…", "totalSpent": "$1,300.00", "totalSpentCents": 130000 }
-   ```
+   <Image src={dashboard} alt="The Budget Tracker dashboard in a browser. A 'Spent this month' figure of $1,300.00 in large red text sits above a Transactions table listing dated rows with description, category, and amount, and an 'Add a transaction' form below." />
 
 </Steps>
 
