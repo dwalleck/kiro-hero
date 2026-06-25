@@ -11,19 +11,19 @@ Steering files are markdown files that Kiro loads into context automatically, ev
 session. They're how you give the agent durable knowledge about *your* project instead
 of repeating yourself in every prompt. Good things to put in a steering file:
 
-- **The purpose of the project** — what it does and who it's for.
-- **The technologies used** — language, frameworks, and key libraries.
-- **Organizational coding standards** — conventions that go beyond general language
+- **The purpose of the project**: what it does and who it's for.
+- **The technologies used**: language, frameworks, and key libraries.
+- **Organizational coding standards**: conventions that go beyond general language
   style, like how your team handles money, errors, naming, or comments.
 
 Kiro's default agent loads any `.md` file under `.kiro/steering/` in your project (and
-`~/.kiro/steering/` for personal, machine-wide rules). No configuration needed — drop a
+`~/.kiro/steering/` for personal, machine-wide rules). No configuration needed. Drop a
 file in, and by default it's part of every conversation.
 
 ## When a steering file loads
 
 "Every conversation" is only the *default*. A steering file's YAML frontmatter has an
-`inclusion` field that controls **when** the file enters context — which matters because
+`inclusion` field that controls **when** the file enters context. This matters because
 anything loaded on every turn costs context whether it's relevant or not.
 
 | `inclusion` | When the file loads | Use it for |
@@ -46,15 +46,15 @@ fileMatchPattern: 'src/components/**/*.tsx'
 - Co-locate the test as `<Component>.test.tsx`.
 ```
 
-That file stays out of context until you open or reference a matching `.tsx` file — then it
+That file stays out of context until you open or reference a matching `.tsx` file. Then it
 loads, whole, automatically.
 
 <Aside type="note" title="`fileMatch` is conditional inclusion, not progressive disclosure">
-A `fileMatch` matcher loads the **entire file** the moment a matching path is in context —
-one stage, triggered by your file tree. That's different from a *skill's* progressive
+A `fileMatch` matcher loads the **entire file** the moment a matching path is in context.
+That's one stage, triggered by your file tree. It's different from a *skill's* progressive
 disclosure (covered later), where the agent always sees a short description and pulls in the
-full body only when your *request* matches. Same goal — don't pay for context you aren't
-using — reached two different ways: steering scopes by **which files you're touching**, a
+full body only when your *request* matches. Same goal, which is to not pay for context you aren't
+using, reached two different ways. Steering scopes by **which files you're touching**, a
 skill discloses by **what you're asking for**.
 </Aside>
 
@@ -68,7 +68,7 @@ explanation. For anything specific, a short before/after **example** beats a des
 
 The budget tracker follows one firm rule throughout its code: **money is integer cents
 (`long`), never `decimal` or `float`, and every money value shown to a user goes through
-`Money.Format`** (see `Money.cs`). That's a *project* decision — nothing forces it, and the
+`Money.Format`** (see `Money.cs`). That's a *project* decision. Nothing forces it, and the
 agent only follows it if it happens to notice. A steering file turns "happens to notice" into
 "always."
 
@@ -89,13 +89,13 @@ curl "http://localhost:5000/summary/by-category"
 
 <Aside title="What to notice">
 Look at how the amounts come back. There's a real chance they *don't* match the rest of the
-app — raw cents like `60000`, a bare `decimal`, or some inline `ToString("C")` — instead of
+app. You might get raw cents like `60000`, a bare `decimal`, or some inline `ToString("C")`, instead of
 the `"$600.00"` strings `/transactions` and `/summary` return. The agent had a coin-flip at
-your convention, because it was never written down. *(If it happened to match — good. Read on:
+your convention, because it was never written down. *(If it happened to match, good. Read on:
 the point is turning that coin-flip into a guarantee.)*
 </Aside>
 
-### 2. Write the rule — in your own words
+### 2. Write the rule, in your own words
 
 **Don't paste a prepared file.** In one or two imperative sentences, write the convention the
 way *you'd* say it to a new teammate:
@@ -107,10 +107,10 @@ way *you'd* say it to a new teammate:
 - Every money value returned from an API or shown to a user is formatted with `Money.Format`.
 ```
 
-Keep it terse and imperative — "do this, not that" lands far better than a paragraph.
+Keep it terse and imperative. "Do this, not that" lands far better than a paragraph.
 
 <Aside type="note" title="`always`, on purpose">
-This rule applies anywhere money is touched, so it's an `always` file (the default) — it loads
+This rule applies anywhere money is touched, so it's an `always` file (the default) and it loads
 every turn. Contrast it with a rule scoped to one area, which belongs in a `fileMatch` file
 (above). One topic per file, and keep `always` files short: they cost context on *every* turn.
 </Aside>
@@ -151,18 +151,18 @@ curl "http://localhost:5000/summary/by-category"
 
 <Aside type="tip" title="What changed">
 The amounts now come back as `"$600.00"` strings via `Money.Format`, consistent with the rest
-of the app — and you'll see the agent reach for `Money.Format` in its reasoning. Same model,
-same prompt; the only difference is the rule you gave it.
+of the app, and you'll see the agent reach for `Money.Format` in its reasoning. Same model,
+same prompt. The only difference is the rule you gave it.
 </Aside>
 
 <Aside type="note" title="Checkpoint">
 Raise your hand when `/summary/by-category` returns money in the app's `$X.XX` style **and your
 prediction matched** (or you can explain why it didn't). You've made a convention the agent
-*reliably* follows — not one it might happen to notice.
+*reliably* follows, not one it might happen to notice.
 </Aside>
 
 <Aside type="caution" title="Steering shifts the odds; it doesn't enforce">
-A steering file makes the convention *far* more likely — but the model still writes the code,
+A steering file makes the convention *far* more likely, but the model still writes the code,
 so it's not a guarantee. That's why the rule is short and concrete. This same money convention
 returns in Act 3, where a guardrail (a hook) can make part of it genuinely non-negotiable.
 </Aside>

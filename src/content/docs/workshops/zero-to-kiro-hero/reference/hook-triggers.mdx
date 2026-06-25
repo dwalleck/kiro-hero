@@ -13,20 +13,20 @@ The lesson keeps the lifecycle diagram and the examples; this page holds the loo
 
 | Trigger | Fires when | Matcher matches | Can block? |
 | --- | --- | --- | --- |
-| `SessionStart` | Session begins | — | No |
-| `Stop` | Session ends | — | No |
+| `SessionStart` | Session begins | None | No |
+| `Stop` | Session ends | None | No |
 | `PreToolUse` | Before a tool runs | Tool name (regex) | Yes |
 | `PostToolUse` | After a tool runs | Tool name (regex) | No |
-| `PreTaskExec` | Before a spec task starts | — | Yes |
-| `PostTaskExec` | After a spec task finishes | — | No |
+| `PreTaskExec` | Before a spec task starts | None | Yes |
+| `PostTaskExec` | After a spec task finishes | None | No |
 | `UserPromptSubmit` | You submit a prompt | Prompt text (regex) | Yes |
 | `PostFileCreate` | After a file is created | File path (regex) | No |
 | `PostFileSave` | After a file is saved | File path (regex) | No |
 | `PostFileDelete` | After a file is deleted | File path (regex) | No |
-| `Manual` | You trigger it on demand | — | No |
+| `Manual` | You trigger it on demand | None | No |
 
 <Aside type="caution" title="`Stop` is once per session, not once per turn">
-`Stop` fires when the whole session ends — not after each agent turn. To react to each
+`Stop` fires when the whole session ends, not after each agent turn. To react to each
 change the agent makes mid-session, use `PostFileSave` or `PostToolUse` instead.
 </Aside>
 
@@ -39,7 +39,7 @@ change the agent makes mid-session, use `PostFileSave` or `PostToolUse` instead.
 | `PostFileSave`, `PostFileCreate`, `PostFileDelete` | File path |
 | `PreToolUse`, `PostToolUse` | Tool name |
 | `UserPromptSubmit` | Prompt text |
-| `SessionStart`, `Stop`, `PreTaskExec`, `PostTaskExec`, `Manual` | Not evaluated — the hook always fires |
+| `SessionStart`, `Stop`, `PreTaskExec`, `PostTaskExec`, `Manual` | Not evaluated. The hook always fires |
 
 Omitting `matcher` means the hook always matches. For file-related triggers, the
 `{{filePath}}` template variable is available inside a `command` action and expands to the
@@ -51,7 +51,7 @@ For `command` actions, the exit code carries meaning:
 
 | Exit code | Behavior |
 | --- | --- |
-| `0` | Success. STDOUT is added to the agent's context for `SessionStart` and `UserPromptSubmit`; for every other trigger STDOUT is **ignored**. |
+| `0` | Success. STDOUT is added to the agent's context for `SessionStart` and `UserPromptSubmit`. For every other trigger STDOUT is **ignored**. |
 | `2` | Blocks the action (`PreToolUse` and `UserPromptSubmit` only). STDERR is returned to the agent. |
 | Other | A warning with the command's STDERR is shown to you, and execution proceeds. |
 

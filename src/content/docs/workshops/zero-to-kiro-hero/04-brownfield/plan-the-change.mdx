@@ -1,28 +1,28 @@
 ---
 title: Plan the change
-description: Two ways to turn understanding into a plan — and why the questions matter.
+description: Two ways to turn understanding into a plan, and why the questions matter.
 sidebar:
   order: 3
 ---
 
 import { Aside, Steps } from '@astrojs/starlight/components';
 
-**Goal:** an explicit plan for making `spent` honest — *before* touching code. This is the spine
+**Goal:** an explicit plan for making `spent` honest, *before* touching code. This is the spine
 of the whole workshop: the plan is the difference between a change that holds and one that
 silently breaks.
 
 You'll build the plan two different ways and compare what each surfaces.
 
-## Path A — Spec mode
+## Path A: Spec mode
 
-<Aside type="note" title="Instructor demo — fast, but quiet">
+<Aside type="note" title="Instructor demo: fast, but quiet">
 In the Kiro IDE, switch to **Spec mode** and ask: *"Make the spending summary correct."* It runs
-to a full spec **without asking you much** — and that's the risk. Given a vague request, it fills
+to a full spec **without asking you much**, and that's the risk. Given a vague request, it fills
 the gaps with *its* assumptions. Watch whether its spec even mentions transfers, refunds, or
-pending. Spec mode is excellent when you already know exactly what you want; here, you don't yet.
+pending. Spec mode is excellent when you already know exactly what you want. Here, you don't yet.
 </Aside>
 
-## Path B — grill-me-with-docs
+## Path B: grill-me-with-docs
 
 <Aside type="caution" title="Requires the skill from Act 1">
 This uses the `grill-me-with-docs` skill you installed in [Act 1 · Skills](../../02-context/skills/).
@@ -36,7 +36,7 @@ Run it against the same goal:
 ```
 
 It reads the code **and the project docs you generated with `/code init`**, then **interrogates
-you** — often 10–20 questions — until it's sure it understands, and writes the answers into a
+you**, often 10 to 20 questions, until it's sure it understands, and writes the answers into a
 decision doc. It forces the decisions the vague
 request hid:
 
@@ -53,7 +53,7 @@ However you got here, capture the **decisions** and the **touch points**:
 
 <Steps>
 
-1. **Decisions:** transfers excluded · refunds netted · pending excluded → honest total **$850**.
+1. **Decisions:** transfers excluded, refunds netted, pending excluded, for an honest total of **$850**.
 2. **Touch points** (this is what vibing misses): the `transactions` **schema** + **seed** (add a
    `kind` so a transfer is distinguishable), the `/summary` **query**, the `/transactions`
    **output**, and the **tests**.
@@ -61,13 +61,13 @@ However you got here, capture the **decisions** and the **touch points**:
 </Steps>
 
 <Aside type="tip" title="Same destination, different path">
-Both paths can reach the same plan — but Spec mode got there only because *you* knew to mention
-transfers/refunds/pending, while grill-me got there by *asking*. Neither is "right"; pick the one
+Both paths can reach the same plan. But Spec mode got there only because *you* knew to mention
+transfers/refunds/pending, while grill-me got there by *asking*. Neither is "right." Pick the one
 that fits how clearly you already understand the change. For an unfamiliar codebase, you usually
 want to be grilled.
 </Aside>
 
 <Aside type="note" title="Checkpoint">
 Everyone has a written plan listing the three decisions **and** the touch points the change
-threads through — schema, seed, query, output, tests.
+threads through: schema, seed, query, output, tests.
 </Aside>

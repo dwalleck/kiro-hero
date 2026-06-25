@@ -1,6 +1,6 @@
 ---
 title: Orient in the codebase
-description: Use the agent to map where "spent" is computed — and verify what it tells you.
+description: Use the agent to map where "spent" is computed, and verify what it tells you.
 sidebar:
   order: 2
 ---
@@ -11,53 +11,53 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 everything that feeds that number.
 
 You didn't write this app, and you have minutes, not hours. This is the everyday reality the
-agent is genuinely great at — *if* you check its answers instead of trusting them.
+agent is genuinely great at, *if* you check its answers instead of trusting them.
 
 ## Map it with the agent
 
-<Aside type="note" title="Instructor demo — ask, then verify">
+<Aside type="note" title="Instructor demo: ask, then verify">
 Ask broad-to-narrow and **verify each answer against the code**, out loud:
 
 - *"Explain what this app does and how it's structured."*
-- *"Where is the spending total for `/summary` computed?"* → it should point at `Program.cs`.
-- *"How does a transaction know whether it's income or an expense?"* → by the **sign** of
-  `amount_cents`; there is no explicit type.
+- *"Where is the spending total for `/summary` computed?"* It should point at `Program.cs`.
+- *"How does a transaction know whether it's income or an expense?"* By the **sign** of
+  `amount_cents`. There is no explicit type.
 
-The third answer is the one that matters — narrate how you'd confirm it (open `Database.cs`, read
+The third answer is the one that matters. Narrate how you'd confirm it (open `Database.cs`, read
 the schema: there's no `kind`/`type` column). Trust nothing you didn't check.
 </Aside>
 
-<Aside type="tip" title="Your turn — find the four feeders">
-Ask the agent to help you locate — and then *confirm yourself* — the places that decide the
-`/summary` number:
+<Aside type="tip" title="Your turn: find the four feeders">
+Ask the agent to help you locate the places that decide the `/summary` number, then *confirm each
+one yourself*:
 
 <Steps>
 
 1. The **query** that sums spending (`Program.cs`, the `/summary` handler).
-2. The **schema and seed** for transactions (`Database.cs`) — note there's no transfer concept.
+2. The **schema and seed** for transactions (`Database.cs`). Note there's no transfer concept.
 3. How money is **formatted** (`Money.cs`).
 4. The **tests** that pin current behavior (`BudgetTracker.Tests`).
 
 </Steps>
 </Aside>
 
-## Capture it — let the agent write the project docs
+## Capture it: let the agent write the project docs
 
 You can hold the map in your head for now, but the agent shouldn't have to re-derive it every
-session — and the Matt Pocock skills you installed in Act 1 work *against* project docs. Generate
+session. And the Matt Pocock skills you installed in Act 1 work *against* project docs. Generate
 them:
 
 ```text
 /code init
 ```
 
-This scans the repo and writes project documentation — a `CONTEXT.md` describing the domain and
+This scans the repo and writes project documentation: a `CONTEXT.md` describing the domain and
 structure, plus decision records under `docs/adr/`. Skim what it produced and correct anything
-wrong; it's a draft, not gospel. The next lesson's `grill-me-with-docs` reads these to ground its
+wrong. It's a draft, not gospel. The next lesson's `grill-me-with-docs` reads these to ground its
 questions.
 
 <Aside type="note" title="Checkpoint">
-You can point to the exact code that computes `spent` and explain — from the code, not the agent's
-word — why transfers, refunds, and pending charges all land in that number today; and `/code init`
-has produced project docs you've skimmed.
+You can point to the exact code that computes `spent` and explain why transfers, refunds, and
+pending charges all land in that number today. You explain it from the code, not the agent's word.
+And `/code init` has produced project docs you've skimmed.
 </Aside>

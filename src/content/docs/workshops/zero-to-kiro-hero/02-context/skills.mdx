@@ -10,16 +10,16 @@ import { Steps, Aside, FileTree } from '@astrojs/starlight/components';
 ## The problem skills solve
 
 A steering file shapes the agent *for this project*, and a hook fires *at a moment in the
-loop*. But some knowledge is neither project-specific nor lifecycle-bound — it's a
+loop*. But some knowledge is neither project-specific nor lifecycle-bound. It's a
 **reusable workflow** you want everywhere: how you review a PR, how you cut a release, how
-your team writes commit messages. A steering file is the wrong home for it: even with
+your team writes commit messages. A steering file is the wrong home for it. Even with
 `fileMatch`, steering keys off *which files are in your project*, and it doesn't travel
 beyond this repo. You want something that loads based on *what you're asking for* and that
 you can carry between projects and tools.
 
 A **skill** is that workflow packaged up so the agent can pull it in *only when it's
 relevant*. Skills follow the open [Agent Skills](https://agentskills.io) standard, so the
-same package works across Kiro and other compatible tools — and you can install ones other
+same package works across Kiro and other compatible tools, and you can install ones other
 people have already written.
 
 ## What a skill is
@@ -42,7 +42,7 @@ description: Review pull requests for code quality, security issues, and test co
 ```
 
 Skills use **progressive disclosure**: at startup Kiro reads only each skill's `name` and
-`description` — a cheap summary that's always present. When your request matches a
+`description`, a cheap summary that's always present. When your request matches a
 description, and only then, it loads the full body. So the agent knows the skill *exists*
 on every turn but pays for the detailed instructions only when they're relevant.
 
@@ -51,9 +51,9 @@ from the previous lesson. Both avoid loading context you aren't using, but they'
 same mechanism:
 
 - A steering `fileMatch` loads the **whole file in one stage**, triggered by **which files
-  are in your context** — a scoping rule keyed on your file tree.
+  are in your context**. It's a scoping rule keyed on your file tree.
 - A skill's progressive disclosure is **two stages** (summary always on, body on demand),
-  triggered by **what you're asking for** — the agent itself judges the match against the
+  triggered by **what you're asking for**. The agent itself judges the match against the
   description.
 
 A skill named `pr-review` also becomes the `/pr-review` slash command, letting you invoke it
@@ -67,12 +67,12 @@ explicitly.
 | `~/.kiro/skills/` | Every project on your machine | Personal workflows you use everywhere |
 
 When a workspace skill and a global skill share a name, the workspace one wins. The default
-agent loads skills from both locations automatically — custom agents must opt in via their
+agent loads skills from both locations automatically. Custom agents must opt in via their
 `resources` field (covered in *Custom Agents*).
 
 ## Installing a skill
 
-You rarely write skills from scratch — most of the time you install one someone published. The
+You rarely write skills from scratch. Most of the time you install one someone published. The
 open-standard `skills` CLI does it from any Git repository:
 
 ```bash
@@ -81,10 +81,10 @@ npx skills@latest add <owner/repo> -a kiro-cli
 
 Two flags decide *where* it lands:
 
-- **`-a kiro-cli`** — the target agent. **Don't omit this.** Run non-interactively, the CLI
+- **`-a kiro-cli`** is the target agent. **Don't omit this.** Run non-interactively, the CLI
   defaults to a *different* agent (GitHub Copilot), and the files go where Kiro never sees them.
   (`-a` is short for `--agent`.)
-- **`-g`** — install **globally**, into `~/.kiro/skills/` (available in every project), instead
+- **`-g`** installs **globally**, into `~/.kiro/skills/` (available in every project), instead
   of the workspace's `.kiro/skills/`. Use it for personal workflows you want everywhere.
 
 If a repo bundles several skills, add `--skill <name>` to pick one; omit it to install the whole
@@ -92,11 +92,11 @@ set. To browse without leaving the terminal: `npx skills find <query>`.
 
 <Aside type="note" title="The IDE can do this too">
 Prefer clicking? The Kiro panel's **Agent Steering & Skills** section has an **Import a skill**
-flow (paste a GitHub URL to the skill *folder*, or import a local folder). Same result — the CLI
+flow (paste a GitHub URL to the skill *folder*, or import a local folder). Same result. The CLI
 is just scriptable and explicit about the target.
 </Aside>
 
-## Your turn — install the skill you'll use in Act 3
+## Your turn: install the skill you'll use in Act 3
 
 You'll install **`grill-me-with-docs`** (part of Matt Pocock's skill set) now, and *use* it for
 real in Act 3 to plan a change to the budget tracker.
@@ -109,7 +109,7 @@ real in Act 3 to plan a change to the budget tracker.
    npx skills@latest add mattpocock/skills -g -a kiro-cli
    ```
 
-   `-g` puts it in `~/.kiro/skills/`, so it's available in every project — it's a workflow you'll
+   `-g` puts it in `~/.kiro/skills/`, so it's available in every project. It's a workflow you'll
    reuse, not a per-repo rule:
 
    <FileTree>
@@ -126,22 +126,22 @@ real in Act 3 to plan a change to the budget tracker.
    > /context show
    ```
 
-   `grill-me-with-docs` should appear by name — at roughly 0.1% context, because only its
+   `grill-me-with-docs` should appear by name, at roughly 0.1% context, because only its
    description is loaded until you actually call it. The `/grill-me-with-docs` slash command is
-   now available; **don't run it yet** — that's Act 3.
+   now available. **Don't run it yet.** That's Act 3.
 
 </Steps>
 
 <Aside type="note" title="Initialization comes later, in Act 3">
 These skills work *against* project docs (a `CONTEXT.md`, decision records). There's nothing to
-initialize here — you'll generate those docs with `/code init` in
+initialize here. You'll generate those docs with `/code init` in
 [Act 3 · Orient](../../04-brownfield/orient/), right where you first use `grill-me-with-docs`.
 </Aside>
 
-<Aside type="tip" title="Global vs. workspace — and committing">
+<Aside type="tip" title="Global vs. workspace, and committing">
 Because you used `-g`, this skill lives in `~/.kiro/skills/` (yours, every project) and is **not**
 part of the repo. To share a skill with your *team* instead, install it *without* `-g` so it lands
-in the project's `.kiro/skills/`, then commit it — same reasoning as committing steering files and
+in the project's `.kiro/skills/`, then commit it. Same reasoning as committing steering files and
 agents.
 </Aside>
 
@@ -150,4 +150,4 @@ agents.
 You can install a skill with `npx skills@latest add <owner/repo> -a kiro-cli`, explain why
 `-a kiro-cli` and `-g` matter, and confirm `grill-me-with-docs` is live with `/context show`. That
 rounds out the primitives: steering shapes the agent per project, hooks fire on lifecycle events,
-and skills bring in reusable workflows on demand — and you've got the one Act 3 needs.
+and skills bring in reusable workflows on demand. And you've got the one Act 3 needs.

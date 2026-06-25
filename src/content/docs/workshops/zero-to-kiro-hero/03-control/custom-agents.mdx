@@ -1,6 +1,6 @@
 ---
 title: Custom Agents
-description: Define your own agent — its model, tools, permissions, context, and behavior.
+description: Define your own agent. Its model, tools, permissions, context, and behavior.
 sidebar:
   order: 5
 ---
@@ -12,14 +12,14 @@ which tools it can reach, what it's allowed to do without asking, what context i
 with, and how it responds. Kiro ships with built-in agents, but the moment you want to
 tailor any of that to your project, you create your own.
 
-Custom agents are the foundation for much of the rest of this workshop — scoped tool
+Custom agents are the foundation for much of the rest of this workshop. Scoped tool
 permissions, bundled context, and MCP servers are all configured *on an agent*.
 
 ## An agent is a Markdown file
 
 In v3 an agent profile is a **Markdown file with YAML frontmatter**. The frontmatter holds
 the configuration; the body of the document *is* the system prompt. (A JSON file with the
-same fields is equivalent — use Markdown when the prompt is long, JSON when generating
+same fields is equivalent. Use Markdown when the prompt is long, JSON when generating
 configs programmatically.)
 
 ```markdown title=".kiro/agents/workshop.md"
@@ -41,7 +41,7 @@ Prefer the standard library. Write a test alongside any new function.
 ```
 
 The name comes from the filename and the system prompt is the document body, so neither
-needs a frontmatter field. Everything else — model, tools, permissions, context — lives in
+needs a frontmatter field. Everything else (model, tools, permissions, context) lives in
 the frontmatter.
 
 ## Where agents live
@@ -59,19 +59,19 @@ Nested directories are supported, so `~/.kiro/agents/team/planner.md` is the age
 
 | Field | What it controls | Explored in |
 | --- | --- | --- |
-| `description` | One-line summary of the agent | — |
+| `description` | One-line summary of the agent | n/a |
 | `model` | Which model the agent runs on | this lesson |
 | `tools` | Tool **categories** the agent can use (tags) | this lesson |
 | `permissions` | What runs without asking, and what's denied | this lesson |
 | `resources` | Files/skills always loaded into context (`file://`, `skill://`) | Steering Files |
 | `mcpServers` | External tools via MCP, defined inline | MCP Servers |
-| `welcomeMessage` | Greeting shown when the agent starts | — |
+| `welcomeMessage` | Greeting shown when the agent starts | n/a |
 | *(document body)* | The system prompt | this lesson |
 
 ## Tools are categories, not individual tools
 
 The `tools` field takes **category tags**. Each tag groups related capabilities, so you
-don't enumerate individual tools — and when new tools ship under a category, your agent
+don't enumerate individual tools, and when new tools ship under a category, your agent
 picks them up automatically.
 
 | Tag | What it includes |
@@ -91,9 +91,9 @@ picks them up automatically.
 
 These are two different questions, and separating them is the whole point of the model:
 
-- **`tools`** decides what the agent can *see* — its capabilities. If a category isn't
+- **`tools`** decides what the agent can *see*, meaning its capabilities. If a category isn't
   listed, the agent can't use those tools at all.
-- **`permissions`** decides what happens when it *uses* one — allowed silently, denied
+- **`permissions`** decides what happens when it *uses* one: allowed silently, denied
   outright, or paused to ask you.
 
 A permission rule has four parts: a `capability`, an `effect` (`allow`, `ask`, or `deny`),
@@ -119,7 +119,7 @@ Two rules to remember:
   without prompting, refuses anything touching `.env` or `secrets/`, and asks before any
   other shell command or file operation.
 - **Effects resolve by restrictiveness: `deny` > `ask` > `allow`.** A more permissive rule
-  can never override a more restrictive one — so a `deny` always wins.
+  can never override a more restrictive one, so a `deny` always wins.
 
 <Aside type="tip" title="Workspace-wide permissions">
 Permissions can also live outside any agent, in `~/.kiro/settings/permissions.yaml`, where
@@ -147,7 +147,7 @@ repository can't grant itself trust. See the
    kiro-cli
    ```
 
-   The agent's name is `workshop` — the filename without its extension.
+   The agent's name is `workshop`, the filename without its extension.
 
 </Steps>
 
@@ -157,5 +157,5 @@ whole team gets the same model, tools, and permissions. (Note that *permissions 
 still per-user and isn't granted just by cloning.)
 </Aside>
 
-With an agent in place, you can scope exactly what it reaches — next we hand it fresh
+With an agent in place, you can scope exactly what it reaches. Next we hand it fresh
 external tools and knowledge through MCP servers.

@@ -7,13 +7,13 @@ sidebar:
 
 import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-Everything from Act 0 on uses one small app — a .NET budget tracker. This step gets it onto
+Everything from Act 0 on uses one small app, a .NET budget tracker. This step gets it onto
 your machine and confirms it runs, so the workshop itself can stay about Kiro, not setup.
 
 ## 1. Install the .NET SDK with dotnetup
 
 [`dotnetup`](https://github.com/dotnet/sdk/tree/release/dnup/documentation/general/dotnetup) is
-the .NET toolchain manager — it installs and manages .NET at the **user level, no admin required**.
+the .NET toolchain manager. It installs and manages .NET at the **user level, no admin required**.
 
 <Steps>
 
@@ -40,7 +40,7 @@ the .NET toolchain manager — it installs and manages .NET at the **user level,
    dotnetup
    ```
 
-   - **Channel:** pick **`10.0`** — the workshop app targets .NET 10.
+   - **Channel:** pick **`10.0`**. The workshop app targets .NET 10.
    - **Mode:** pick **Terminal Mode**.
 
 3. Restart your terminal (or source your profile), then verify:
@@ -51,7 +51,7 @@ the .NET toolchain manager — it installs and manages .NET at the **user level,
 
 </Steps>
 
-<Aside type="tip" title="Deterministic alternative — let the repo pick the SDK">
+<Aside type="tip" title="Deterministic alternative: let the repo pick the SDK">
 The starter repo pins its SDK in `global.json`. Once you've cloned it (next step) you can skip the
 channel choice: run `dotnetup sdk install` inside it and dotnetup installs exactly the .NET the app
 needs. `dotnet` then refuses any mismatched SDK, so you can't accidentally end up on the wrong one.
@@ -80,7 +80,7 @@ needs. `dotnet` then refuses any mismatched SDK, so you can't accidentally end u
    curl "http://localhost:5000/summary"
    ```
 
-   You should get a JSON spending summary — something like:
+   You should get a JSON spending summary, something like this:
 
    ```json
    { "month": "…", "totalSpent": "$1,300.00", "totalSpentCents": 130000 }

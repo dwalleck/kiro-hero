@@ -15,17 +15,17 @@ import signinIdc from '../../../../../assets/setup/signin-idc.png';
 import signinSuccess from '../../../../../assets/setup/signin-success.png';
 
 With Kiro installed, the last setup step is signing in. Kiro supports several
-providers — pick whichever your account or organization uses:
+providers, so pick whichever your account or organization uses:
 
-- **GitHub** — sign in with your GitHub account.
-- **Google** — sign in with your Google credentials.
-- **AWS Builder ID** — quick setup for individual developers.
-- **AWS IAM Identity Center** — enterprise sign-in (see below).
-- **External identity provider** — your org's IdP, e.g. Microsoft Entra ID or Okta.
+- **GitHub**: sign in with your GitHub account.
+- **Google**: sign in with your Google credentials.
+- **AWS Builder ID**: quick setup for individual developers.
+- **AWS IAM Identity Center**: enterprise sign-in (see below).
+- **External identity provider**: your org's IdP, e.g. Microsoft Entra ID or Okta.
 
 <Aside type="note">
 Individual methods (GitHub, Google, Builder ID) aren't available in AWS GovCloud
-(US) regions — there you'll use IAM Identity Center or an external IdP.
+(US) regions. There you'll use IAM Identity Center or an external IdP.
 </Aside>
 
 <Tabs syncKey="kiro-surface">
@@ -36,7 +36,7 @@ Individual methods (GitHub, Google, Builder ID) aren't available in AWS GovCloud
 
        <Image src={ideSignin} alt="The Kiro IDE first-launch screen with the KIRO logo, the tagline 'An agentic IDE that helps you do your best work.', and a Sign in button." />
 
-    2. Your browser opens to the **Choose a way to sign in/sign up** page — the
+    2. Your browser opens to the **Choose a way to sign in/sign up** page. It's the
        same chooser for every sign-in method. Pick your provider.
 
        <Image src={signinProviders} alt="The Kiro web sign-in page titled 'Choose a way to sign in/sign up', listing Google, GitHub, Builder ID, and Your organization options." />
@@ -91,7 +91,7 @@ Individual methods (GitHub, Google, Builder ID) aren't available in AWS GovCloud
 
     <Aside type="tip" title="Signing in on a remote machine">
     Over SSH, SSM, or in a container the CLI can't open a browser. Run
-    `kiro-cli login` and it shows a URL plus a one-time code — open the URL on
+    `kiro-cli login` and it shows a URL plus a one-time code. Open the URL on
     any device, enter the code, and the CLI detects the login. No port
     forwarding required. (External IdP login isn't supported via device flow yet.)
     </Aside>
@@ -100,17 +100,17 @@ Individual methods (GitHub, Google, Builder ID) aren't available in AWS GovCloud
 
 ## AWS IAM Identity Center
 
-This picks up from the **Choose a way to sign in/sign up** page — step 2 of either
-flow above, the browser page both the IDE and CLI open. Before you start, get two
-things from your admin or help desk: a **Start URL** and the **Region** that hosts
-your identity directory.
+This picks up from the **Choose a way to sign in/sign up** page, which is step 2 of
+either flow above, the browser page both the IDE and CLI open. Before you start, get
+two things from your admin or help desk: a **Start URL** and the **Region** that
+hosts your identity directory.
 
 <Steps>
 
 1. On that chooser, select **Your organization**.
 
 2. On **Sign in with your organization**, you can enter your work email to find
-   your organization — or, if you already have your Identity Center details,
+   your organization. Or, if you already have your Identity Center details,
    choose **Sign in via IAM Identity Center instead**.
 
    <Image src={signinOrg} alt="The 'Sign in with your organization' screen with a work-email field, a Continue button, and a 'Sign in via IAM Identity Center instead' link." />
@@ -124,7 +124,7 @@ your identity directory.
 
 </Steps>
 
-Once you've finished signing in, you're sent back to Kiro — return to step 3 of
+Once you've finished signing in, you're sent back to Kiro. Return to step 3 of
 your flow above (the welcome page in the IDE, or `kiro-cli whoami` in the CLI).
 
 <Aside type="caution" title="AWS GovCloud (US)">

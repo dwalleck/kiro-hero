@@ -17,7 +17,7 @@ the integration test for everything in Acts 1 and 2.
 
 1. **Deploy** the same codebase you changed in Act 2.
 
-2. **Hit the failure.** A latent bug — one you didn't author — surfaces only once
+2. **Hit the failure.** A latent bug, one you didn't author, surfaces only once
    it's running.
 
 3. **Troubleshoot** from the symptom (a log line, a 500, a stack trace) back to the
@@ -27,11 +27,11 @@ the integration test for everything in Acts 1 and 2.
 
 <Aside type="note" title="Why this lands">
 Because you already oriented in this codebase in Act 2, Act 3 is genuinely about
-agent-driven debugging under pressure — not re-comprehending everything from zero
-while also fighting a deploy failure.
+agent-driven debugging under pressure. You're not re-comprehending everything from
+zero while also fighting a deploy failure.
 </Aside>
 
-<Aside type="caution" title="TODO — gated on the codebase decision">
+<Aside type="caution" title="TODO: gated on the codebase decision">
 The specific latent bug (config/env mismatch, missing permission, serialization
 difference, timeout) is chosen with the app and deploy target. Keep it separate and
 latent so it doesn't contaminate Act 2.
