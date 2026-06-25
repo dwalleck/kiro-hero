@@ -214,6 +214,15 @@ both the most useful place to inject context *and* the easiest place to watch a 
 
 </Steps>
 
+<Aside type="note" title="Shell-specific commands don't travel; a task runner does">
+You had to pick a tab because that `command` is written for one shell — so the hook a teammate pulls
+from the repo breaks the moment they're on the other OS. When the logic grows past a one-liner, or
+your team spans platforms, have the hook call a task in your project's *own* language instead of
+inline shell. An **npm script** (`npm run state`), a Rust **`cargo xtask`**, or a **single-file C#
+app** (`dotnet run state.cs`) runs identically on every machine, and the hook JSON collapses to one
+portable line that's the same in both tabs.
+</Aside>
+
 <Aside type="tip" title="What to do with this hook">
 Unlike a throwaway experiment, this one earns its place. Leave `project-state.json` in
 `.kiro/hooks/` if you find it useful. It won't interfere with the examples below, which

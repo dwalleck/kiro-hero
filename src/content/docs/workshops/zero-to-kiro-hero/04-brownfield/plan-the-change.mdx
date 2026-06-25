@@ -26,19 +26,20 @@ pending. Spec mode is excellent when you already know exactly what you want. Her
 
 <Aside type="caution" title="Requires the skill from Act 1">
 This uses the `grill-me-with-docs` skill you installed in [Act 1 · Skills](../../02-context/skills/).
-If you skipped it: `npx skills@latest add mattpocock/skills -g -a kiro-cli`, then restart Kiro.
+If you skipped it: `npx skills@latest add mattpocock/skills -a kiro-cli`, then restart Kiro.
 </Aside>
 
-Run it against the same goal:
+Run it against the same goal, but specific enough that Kiro can find what to fix — name the
+**symptom**, not the fix:
 
 ```text
-/grill-me-with-docs make the spending summary correct
+/grill-me-with-docs the spending total in /summary over-counts — make it report the honest number
 ```
 
-It reads the code **and the project docs you generated with `/code init`**, then **interrogates
+It reads the code **and the project docs you generated with `/code summary`**, then **interrogates
 you**, often 10 to 20 questions, until it's sure it understands, and writes the answers into a
-decision doc. It forces the decisions the vague
-request hid:
+decision doc. Naming the symptom only points it at the right code — it still forces the decisions
+the prompt left open:
 
 - Does a **transfer** between your own accounts count as spending? *(no)*
 - Does a **refund** reduce spending, or get ignored? *(reduce)*

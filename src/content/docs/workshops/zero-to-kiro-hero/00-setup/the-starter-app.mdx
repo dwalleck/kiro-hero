@@ -12,40 +12,63 @@ import dashboard from '../../../../../assets/setup/dashboard.png';
 Everything from Act 0 on uses one small app, a .NET budget tracker. This step gets it onto
 your machine and confirms it runs, so the workshop itself can stay about Kiro, not setup.
 
-## 1. Install the .NET SDK with dotnetup
+## 1. Install the .NET SDK
 
-[`dotnetup`](https://github.com/dotnet/sdk/tree/release/dnup/documentation/general/dotnetup) is
-the .NET toolchain manager. It installs and manages .NET at the **user level, no admin required**.
+The workshop app targets **.NET 10**. On macOS, Windows, or most Linux, install it with
+[`dotnetup`](https://github.com/dotnet/sdk/tree/release/dnup/documentation/general/dotnetup), the
+.NET toolchain manager — it installs and manages .NET at the **user level, no admin required**. On
+Ubuntu, the simplest path is straight from `apt`.
 
 <Steps>
 
-1. Download `dotnetup`:
+1. Install the SDK for your platform.
 
    <Tabs syncKey="os">
      <TabItem label="macOS / Linux">
+       Download and run `dotnetup`:
+
        ```bash
        curl -fsSL https://aka.ms/dotnetup/get-dotnetup.sh | bash
        ```
+
+       Follow the printed instructions to add `dotnetup` to your `PATH` and restart your terminal,
+       then run it and take the suggested first-time setup:
+
+       ```bash
+       dotnetup
+       ```
+
+       - **Channel:** pick **`10.0`**. The workshop app targets .NET 10.
+       - **Mode:** pick **Terminal Mode**.
      </TabItem>
      <TabItem label="Windows (PowerShell)">
-       ```pwsh
+       Download and run `dotnetup`:
+
+       ```powershell
        iwr https://aka.ms/dotnetup/get-dotnetup.ps1 | iex
+       ```
+
+       Follow the printed instructions to add `dotnetup` to your `PATH` and restart your terminal,
+       then run it and take the suggested first-time setup:
+
+       ```powershell
+       dotnetup
+       ```
+
+       - **Channel:** pick **`10.0`**. The workshop app targets .NET 10.
+       - **Mode:** pick **Terminal Mode**.
+     </TabItem>
+     <TabItem label="Ubuntu (apt)">
+       Install the SDK directly from `apt` — no toolchain manager needed:
+
+       ```bash
+       sudo apt-get update && \
+         sudo apt-get install -y dotnet-sdk-10.0
        ```
      </TabItem>
    </Tabs>
 
-   Follow the printed instructions to add `dotnetup` to your `PATH`, then restart your terminal.
-
-2. Run `dotnetup` and take the suggested first-time setup:
-
-   ```bash
-   dotnetup
-   ```
-
-   - **Channel:** pick **`10.0`**. The workshop app targets .NET 10.
-   - **Mode:** pick **Terminal Mode**.
-
-3. Restart your terminal (or source your profile), then verify:
+2. Verify the install (restart your terminal first if you used `dotnetup`):
 
    ```bash
    dotnet --version
@@ -54,9 +77,10 @@ the .NET toolchain manager. It installs and manages .NET at the **user level, no
 </Steps>
 
 <Aside type="tip" title="Deterministic alternative: let the repo pick the SDK">
-The starter repo pins its SDK in `global.json`. Once you've cloned it (next step) you can skip the
-channel choice: run `dotnetup sdk install` inside it and dotnetup installs exactly the .NET the app
-needs. `dotnet` then refuses any mismatched SDK, so you can't accidentally end up on the wrong one.
+Using `dotnetup`? The starter repo pins its SDK in `global.json`. Once you've cloned it (next step)
+you can skip the channel choice: run `dotnetup sdk install` inside it and dotnetup installs exactly
+the .NET the app needs. `dotnet` then refuses any mismatched SDK, so you can't accidentally end up
+on the wrong one.
 </Aside>
 
 ## 2. Clone and run the app

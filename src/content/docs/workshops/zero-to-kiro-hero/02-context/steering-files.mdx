@@ -16,19 +16,18 @@ of repeating yourself in every prompt. Good things to put in a steering file:
 - **Organizational coding standards**: conventions that go beyond general language
   style, like how your team handles money, errors, naming, or comments.
 
-Kiro's default agent loads any `.md` file under `.kiro/steering/` in your project (and
-`~/.kiro/steering/` for personal, machine-wide rules). No configuration needed. Drop a
-file in, and by default it's part of every conversation.
+Steering files live under `.kiro/steering/` in your project (or `~/.kiro/steering/` for personal,
+machine-wide rules). Each file's YAML frontmatter carries an `inclusion` field that tells Kiro
+**when** to load it — mark a file `inclusion: always` and it joins every conversation.
 
 ## When a steering file loads
 
-"Every conversation" is only the *default*. A steering file's YAML frontmatter has an
-`inclusion` field that controls **when** the file enters context. This matters because
-anything loaded on every turn costs context whether it's relevant or not.
+The `inclusion` field controls **when** a file enters context. This matters because anything
+loaded on every turn costs context whether it's relevant or not. There are three modes:
 
 | `inclusion` | When the file loads | Use it for |
 | --- | --- | --- |
-| `always` (default) | Every turn of every session | Project-wide rules that always apply |
+| `always` | Every turn of every session | Project-wide rules that always apply |
 | `fileMatch` | Only when a file matching `fileMatchPattern` is in context | Rules scoped to one part of the codebase |
 | `manual` | Only when you reference it with `#` in a prompt | Occasional context you pull in by hand |
 
@@ -101,6 +100,10 @@ the point is turning that coin-flip into a guarantee.)*
 way *you'd* say it to a new teammate:
 
 ```markdown title=".kiro/steering/money.md"
+---
+inclusion: always
+---
+
 # Money
 
 - All monetary amounts are integer **cents** (`long`). Never use `decimal`, `double`, or `float` for money.
@@ -110,9 +113,10 @@ way *you'd* say it to a new teammate:
 Keep it terse and imperative. "Do this, not that" lands far better than a paragraph.
 
 <Aside type="note" title="`always`, on purpose">
-This rule applies anywhere money is touched, so it's an `always` file (the default) and it loads
-every turn. Contrast it with a rule scoped to one area, which belongs in a `fileMatch` file
-(above). One topic per file, and keep `always` files short: they cost context on *every* turn.
+This rule applies anywhere money is touched, so it gets `inclusion: always` and loads every turn.
+Set the mode explicitly — in the CLI a steering file isn't pulled in until you do. Contrast it with
+a rule scoped to one area, which belongs in a `fileMatch` file (above). One topic per file, and keep
+`always` files short: they cost context on *every* turn.
 </Aside>
 
 ### 3. Predict, then regenerate
@@ -136,7 +140,7 @@ rule is loaded? Say it out loud or jot it down.
    /context show
    ```
 
-   You should see `money.md` listed. If not, check it's directly under `.kiro/steering/` and ends in `.md`.
+   You should see `money.md` listed. If not, check it's directly under `.kiro/steering/`, ends in `.md`, and has the `inclusion: always` frontmatter at the top.
 
 3. Remove the previous attempt (delete the endpoint, clear the context) and ask for the
    **exact same feature** again.
@@ -153,12 +157,6 @@ curl "http://localhost:5000/summary/by-category"
 The amounts now come back as `"$600.00"` strings via `Money.Format`, consistent with the rest
 of the app, and you'll see the agent reach for `Money.Format` in its reasoning. Same model,
 same prompt. The only difference is the rule you gave it.
-</Aside>
-
-<Aside type="note" title="Checkpoint">
-Raise your hand when `/summary/by-category` returns money in the app's `$X.XX` style **and your
-prediction matched** (or you can explain why it didn't). You've made a convention the agent
-*reliably* follows, not one it might happen to notice.
 </Aside>
 
 <Aside type="caution" title="Steering shifts the odds; it doesn't enforce">

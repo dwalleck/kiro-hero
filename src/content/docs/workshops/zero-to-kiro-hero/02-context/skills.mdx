@@ -100,17 +100,17 @@ real in Act 3 to plan a change to the budget tracker.
 
 <Steps>
 
-1. Install the set globally, targeting Kiro:
+1. Install the set into this project, targeting Kiro:
 
    ```bash
-   npx skills@latest add mattpocock/skills -g -a kiro-cli
+   npx skills@latest add mattpocock/skills -a kiro-cli
    ```
 
-   `-g` puts it in `~/.kiro/skills/`, so it's available in every project. It's a workflow you'll
-   reuse, not a per-repo rule:
+   With no `-g`, it installs into this project's `.kiro/skills/` rather than `~/.kiro/skills/` —
+   scoped to the budget tracker, and part of the repo, so it's right here when you reach Act 3:
 
    <FileTree>
-   - ~/.kiro/
+   - .kiro/
      - skills/
        - grill-me-with-docs/
          - SKILL.md
@@ -131,20 +131,21 @@ real in Act 3 to plan a change to the budget tracker.
 
 <Aside type="note" title="Initialization comes later, in Act 3">
 These skills work *against* project docs (a `CONTEXT.md`, decision records). There's nothing to
-initialize here. You'll generate those docs with `/code init` in
+initialize here. You'll generate those docs with `/code summary` in
 [Act 3 · Orient](../../04-brownfield/orient/), right where you first use `grill-me-with-docs`.
 </Aside>
 
-<Aside type="tip" title="Global vs. workspace, and committing">
-Because you used `-g`, this skill lives in `~/.kiro/skills/` (yours, every project) and is **not**
-part of the repo. To share a skill with your *team* instead, install it *without* `-g` so it lands
-in the project's `.kiro/skills/`, then commit it. Same reasoning as committing steering files and
-agents.
+<Aside type="tip" title="Workspace vs. global, and committing">
+Because you left `-g` off, this skill lives in the project's `.kiro/skills/` — commit it and anyone
+who clones the repo gets it, the same reasoning as committing steering files and agents. For a
+*personal* workflow you want in **every** project instead, add `-g` so it lands in `~/.kiro/skills/`
+(yours, machine-wide, and not part of any repo).
 </Aside>
 
 ## Checkpoint
 
 You can install a skill with `npx skills@latest add <owner/repo> -a kiro-cli`, explain why
-`-a kiro-cli` and `-g` matter, and confirm `grill-me-with-docs` is live with `/context show`. That
+`-a kiro-cli` matters and what `-g` would change, and confirm `grill-me-with-docs` is live with
+`/context show`. That
 rounds out the primitives: steering shapes the agent per project, hooks fire on lifecycle events,
 and skills bring in reusable workflows on demand. And you've got the one Act 3 needs.

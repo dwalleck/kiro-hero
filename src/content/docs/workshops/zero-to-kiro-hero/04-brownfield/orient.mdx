@@ -41,23 +41,77 @@ one yourself*:
 </Steps>
 </Aside>
 
-## Capture it: let the agent write the project docs
+## Capture it: equip the agent to carry the map forward
 
-You can hold the map in your head for now, but the agent shouldn't have to re-derive it every
-session. And the Matt Pocock skills you installed in Act 1 work *against* project docs. Generate
-them:
+You held the map in your head to *learn* it. But the agent shouldn't re-derive it every session,
+and right now it's reading this C# codebase as plain text — grepping for names instead of resolving
+them. A few one-time moves fix that: initialize the project, give the agent a real **C# language
+server**, have it **write the project docs**, then wire up the skill the next lesson needs.
 
-```text
-/code init
-```
+<Steps>
 
-This scans the repo and writes project documentation: a `CONTEXT.md` describing the domain and
-structure, plus decision records under `docs/adr/`. Skim what it produced and correct anything
-wrong. It's a draft, not gospel. The next lesson's `grill-me-with-docs` reads these to ground its
-questions.
+1. **Install the C# language server.** [`csharp-ls`](https://github.com/razzmatazz/csharp-language-server)
+   ships as a .NET global tool, so the SDK you already have installs it:
+
+   ```bash
+   dotnet tool install -g csharp-ls
+   ```
+
+2. **Initialize the project for the agent.**
+
+   ```text
+   /code init
+   ```
+
+   This bootstraps the agent's project configuration. Run it before the next step, which edits that
+   configuration.
+
+3. **Register the language server.** Open `.kiro/settings/lsp.json` and add a `csharp` entry under
+   `"languages"`, alongside the ones already there (entries are comma-separated, so mind the comma):
+
+   ```json
+   "csharp": {
+     "name": "csharp-language-server",
+     "command": "csharp-ls",
+     "args": [],
+     "file_extensions": ["cs"],
+     "project_patterns": ["*.csproj", "*.sln"],
+     "exclude_patterns": ["**/bin/**", "**/obj/**"],
+     "multi_workspace": true,
+     "initialization_options": {}
+   }
+   ```
+
+   Now when the agent looks up where `spent` is computed, it can *resolve the symbol* — jump to the
+   definition, list every caller — instead of guessing from text matches. `project_patterns` point
+   it at the `.csproj`/`.sln`; `exclude_patterns` keep build output (`bin/`, `obj/`) out of the index.
+
+4. **Generate the project docs.**
+
+   ```text
+   /code summary
+   ```
+
+   This scans the repo and writes project documentation: a `CONTEXT.md` describing the domain and
+   structure, plus decision records under `docs/adr/`. With the language server live, what it writes
+   is grounded in resolved symbols, not string matches. Skim what it produced and correct anything
+   wrong — it's a draft, not gospel.
+
+5. **Set up the Matt Pocock skills.**
+
+   ```text
+   /setup-matt-pocock-skills
+   ```
+
+   You installed `grill-me-with-docs` back in [Act 1 · Skills](../../02-context/skills/); this runs
+   the per-project setup it needs so it can read the docs you just generated. The next lesson points
+   `/grill-me-with-docs` straight at them.
+
+</Steps>
 
 <Aside type="note" title="Checkpoint">
 You can point to the exact code that computes `spent` and explain why transfers, refunds, and
-pending charges all land in that number today. You explain it from the code, not the agent's word.
-And `/code init` has produced project docs you've skimmed.
+pending charges all land in that number today — from the code, not the agent's word. The agent now
+has a C# language server for precise navigation, `/code summary` has produced project docs you've
+skimmed, and the Matt Pocock skills are set up for the next lesson.
 </Aside>
