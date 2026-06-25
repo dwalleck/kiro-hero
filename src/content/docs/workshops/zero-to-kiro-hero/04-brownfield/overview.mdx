@@ -8,9 +8,9 @@ sidebar:
 import { Aside, Steps } from '@astrojs/starlight/components';
 
 **By the end of this act you can:** drop into the budget tracker, use the agent to map how it
-works, and fix the bug from the cold open. You'll fix it *correctly*, with a test that proves it.
+works, and fix the bug from Act 0. You'll fix it *correctly*, with a test that proves it.
 
-Remember the cold open: `/summary` confidently reported **$1,300** spent this month, and it was
+Remember Act 0: `/summary` confidently reported **$1,300** spent this month, and it was
 wrong. This is where you make it right. Not by vibing a patch, but by orienting, planning, and
 executing a change that *holds*.
 
@@ -29,7 +29,7 @@ executing a change that *holds*.
 </Steps>
 
 <Aside type="note" title="The change: make `spent` honest">
-The cold open's $1,300 over-counts three ways: a **transfer** to your own savings, a **refund**,
+That $1,300 over-counts three ways: a **transfer** to your own savings, a **refund**,
 and a **pending** charge. Fixing the transfer means introducing a concept the code doesn't have
 yet. Right now transactions are classified income-vs-expense only by the *sign* of the amount, with no
 notion of a **transfer**. You'll add that third kind to the closed set, then handle the refund

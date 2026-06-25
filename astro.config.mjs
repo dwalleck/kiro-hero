@@ -52,7 +52,7 @@ export default defineConfig({
                   { label: 'Get the Starter App', slug: 'workshops/zero-to-kiro-hero/00-setup/the-starter-app' },
                 ],
               },
-              { label: 'Act 0 · First Contact', items: [{ autogenerate: { directory: 'workshops/zero-to-kiro-hero/01-cold-open' } }] },
+              { label: 'Act 0 · Introduction', items: [{ autogenerate: { directory: 'workshops/zero-to-kiro-hero/01-introduction' } }] },
               { label: 'Act 1 · Context', items: [{ autogenerate: { directory: 'workshops/zero-to-kiro-hero/02-context' } }] },
               { label: 'Act 2 · Control', items: [{ autogenerate: { directory: 'workshops/zero-to-kiro-hero/03-control' } }] },
               { label: 'Act 3 · Brownfield', items: [{ autogenerate: { directory: 'workshops/zero-to-kiro-hero/04-brownfield' } }] },

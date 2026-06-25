@@ -11,12 +11,28 @@ import { Aside, CardGrid, Card } from '@astrojs/starlight/components';
 pull in reusable workflows on demand. You'll have watched it guess wrong without that
 context, then get it right once you supply it.
 
-The cold open showed an agent with no idea what your project values. This act fixes that.
+Act 0 showed an agent with no idea what your project values. This act fixes that.
 Both primitives here answer one question. *What does the agent know?* And both earn their
 keep by loading only what's relevant, when it's relevant.
 
 - **Steering files** are durable knowledge about *this* project: conventions, standards, structure.
 - **Skills** are reusable *workflows* the agent pulls in on demand, based on what you're asking for.
+
+## Where the agent's knowledge comes from
+
+Those two are layers in a bigger stack. Picture a pyramid of where the agent gets what it knows,
+from the always-on foundation at the bottom to the just-in-time specifics at the top:
+
+<div style="margin: 1.5rem auto; max-width: 560px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;">
+  <div style="width: 48%; background: #f3d9fb; color: #1a1a1a; padding: 0.55rem 0.75rem; border-radius: 6px;"><strong>Skills</strong><br /><small>pulled in on demand, only when your request needs them</small></div>
+  <div style="width: 72%; background: #d9e2fb; color: #1a1a1a; padding: 0.55rem 0.75rem; border-radius: 6px;"><strong>Steering</strong><br /><small>your project's conventions, loaded always or by file</small></div>
+  <div style="width: 96%; background: #d9f5e3; color: #1a1a1a; padding: 0.55rem 0.75rem; border-radius: 6px;"><strong>AGENTS.md</strong><br /><small>the always-on foundation the agent reads first</small></div>
+</div>
+
+The lower a layer sits, the broader it is and the more often it loads. The higher you go, the more
+specific it gets, and the longer it waits until it's actually needed. This act is about the two
+layers you shape by hand, **steering** and **skills**. The base, `AGENTS.md`, is the project-wide
+foundation the agent reads every session.
 
 ## The method: feel the absence, then the fix
 

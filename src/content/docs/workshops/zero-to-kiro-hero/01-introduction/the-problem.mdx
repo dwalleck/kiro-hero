@@ -1,0 +1,100 @@
+---
+title: The Problem
+description: Run a feature that looks finished, then ask the one question that decides everything.
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+You're about to run a feature that looks completely finished. Clean code, a real answer, ships
+today. Then we'll ask the one question nobody asked while it was being built: *is it right?*
+
+That gap, between code that **looks** right and code you can **prove** is right, is the whole
+workshop.
+
+## Meet the app
+
+Everyone starts from the same app, a tiny budget tracker. **You didn't write it**, and that's the
+point. Real work almost never starts from a blank page, and a shared starting point means nobody
+in the room is ahead.
+
+It does one simple thing. You record transactions, money going out and money coming in, and it
+tells you **how much you spent this month**. There's a small dashboard with the running total, the
+list of transactions, and a form to add more.
+
+<Steps>
+
+1. Start the app you set up in [Setup → Get the Starter App](../../00-setup/the-starter-app/):
+
+   ```bash
+   dotnet run --urls http://localhost:5000
+   ```
+
+2. Open `http://localhost:5000` in your browser. The sample data is rebuilt on every start, so
+   everyone sees the same numbers.
+
+</Steps>
+
+## The feature that looks done
+
+Right at the top, the dashboard tells you what you spent this month:
+
+**$1,300.00.**
+
+A confident number, formatted correctly, sitting in a clean little app. It looks done. It's
+exactly the kind of plausible, agent-generated result that gets shipped every day.
+
+<Aside type="tip" title="Instructor option: build it live">
+For the full effect, ask the agent to build this from scratch instead of using the shipped app:
+*"Add an endpoint that returns how much I spent this month."* It produces clean, working code in
+seconds, and the same wrong answer. The sample data is rigged so any straightforward
+implementation lands here.
+</Aside>
+
+## The one question
+
+Is **$1,300** right? Nobody in the room knows yet, and neither did the code. Let's poke at it.
+
+In the dashboard, add a transaction: **money out**, **$100**, described as **"Transfer to
+savings."** Watch the total climb to **$1,400**.
+
+But did you *spend* that hundred dollars? No. You moved it into your own savings, and the app
+counted your own money against you. Now look down the transaction list and you'll find more of the
+same:
+
+- The **$200 "Transfer to savings"** already in the data has the exact problem you just reproduced.
+- A **$100 grocery refund.** Money came back to you. It should bring your spending *down*, but the
+  number ignores it.
+- A **$150 "Pending groceries"** charge that **hasn't even cleared yet.**
+
+None of those were wrong on purpose. The code did the obvious thing. It added up everything that
+looks like money going out, because **nobody ever told it what "spent" means.**
+
+<Aside type="caution" title="Hold that number">
+We're not going to fix it yet. Hold onto **$1,300**. In Act 3 you'll come back to this exact
+feature, make the number honest, and (here's the part that matters) be able to *prove* the new one
+is right.
+</Aside>
+
+## Why this is the whole workshop
+
+The agent isn't dumb, and it isn't your enemy. It was fast, it was confident, and it produced
+something that looks finished. It just guessed at decisions you never gave it. That's the real
+shape of working with an agent: plenty of confidence, training data that's six months to a year out
+of date, no context about your project, and no guardrails. Your job is to fill those gaps. That's
+what separates vibe coding from actually engineering with an agent.
+
+That's the next ninety minutes:
+
+- **Act 1 · Context.** Give the agent the knowledge it's missing: your conventions, your definition
+  of "spent."
+- **Act 2 · Control.** Put guardrails on what it's allowed to do.
+- **Act 3 · Brownfield.** Come back to this feature and make it correct, on purpose, with a way to
+  prove it.
+
+<Aside type="note" title="Checkpoint">
+Everyone has the dashboard open, has seen "spent this month" read **$1,300**, and has added a
+transfer to watch it climb. Everyone can name at least one reason the number is wrong: a transfer,
+the refund, or the pending charge.
+</Aside>
