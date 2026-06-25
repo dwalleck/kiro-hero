@@ -21,8 +21,11 @@ Give the agent the plan from the previous lesson and let it work the touch point
    `Transfer`), and mark the two transfer rows as `Transfer`.
 2. **Summary query** (`Program.cs`). Exclude `Transfer`, exclude pending, and sum *all* amounts
    (not just negatives) so the refund nets out.
-3. **Transactions output** (`Program.cs`). Surface the new `kind`.
-4. **Tests.** Update the summary expectation and leave the rest alone.
+3. **Reads and writes** (`Program.cs`). Surface `kind` from `GET /transactions`, and accept it on
+   `POST /transactions` so transactions you add carry one.
+4. **Dashboard** (`wwwroot/index.html`). Add a kind choice to the add form and a kind column to
+   the table.
+5. **Tests.** Update the summary expectation and leave the rest alone.
 
 </Steps>
 </Aside>
