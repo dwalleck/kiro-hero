@@ -23,8 +23,9 @@ moment, without you having to remember to ask. That's exactly what a hook is: a 
 a prompt) that fires on its own at a specific point in the agent's lifecycle, so your
 workflow enforces itself.
 
-By the end of this lesson you'll have built the fix for both problems above. First, the
-definitions you need to get there.
+By the end of this lesson you'll have built a hook that catches the first frustration the
+moment it happens, plus a couple worth keeping, and you'll know the shape that guards against
+the second. First, the definitions you need to get there.
 
 ## What a hook is
 
@@ -114,8 +115,7 @@ can declare several hooks:
 
 ## Putting hooks to work
 
-Now we'll build the fix for each problem from the top of the page, right in the budget tracker
-you've been working in.
+Now we'll put hooks to work, right in the budget tracker you've been working in.
 
 ### Make sure the tests run
 
@@ -343,89 +343,14 @@ you*. After a failure you'd tell the agent to fix it. Auto-correcting loops are 
 advanced pattern.
 </Aside>
 
-### Problem 2: protect files the agent must not touch
-
-The second frustration was the agent editing things it shouldn't. `PreToolUse` runs
-*before* a tool executes, and it can **block**: if the hook command exits with code `2`,
-the tool is stopped and the hook's `STDERR` is handed back to the agent, so it sees the
-refusal and reports it.
-
-A good target in a .NET project is the `.csproj` file. Agents love to hand-edit package
-versions in it, when the right move is to run `dotnet add package` so the CLI resolves a real,
-current version. Let's make direct edits to `BudgetTracker.csproj` impossible.
-
-<Steps>
-
-1. Register a `PreToolUse` hook on the file-writing tools. Its command reads the hook context
-   on stdin and exits `2` (which blocks) if the change touches `BudgetTracker.csproj`, handing
-   the agent a message that points it at the CLI instead:
-
-   <Tabs syncKey="shell">
-   <TabItem label="Linux / macOS (bash)">
-
-   ```json title=".kiro/hooks/protect-csproj.json"
-   {
-     "version": "v1",
-     "hooks": [
-       {
-         "name": "protect-csproj",
-         "trigger": "PreToolUse",
-         "matcher": "fs_write|str_replace",
-         "action": {
-           "type": "command",
-           "command": "bash -c 'grep -q \"BudgetTracker.csproj\" && { echo \"Blocked: change the project file with the dotnet CLI (dotnet add package, dotnet add reference), not by editing it directly.\" >&2; exit 2; }; exit 0'"
-         }
-       }
-     ]
-   }
-   ```
-
-   </TabItem>
-   <TabItem label="Windows (PowerShell)">
-
-   ```json title=".kiro/hooks/protect-csproj.json"
-   {
-     "version": "v1",
-     "hooks": [
-       {
-         "name": "protect-csproj",
-         "trigger": "PreToolUse",
-         "matcher": "fs_write|str_replace",
-         "action": {
-           "type": "command",
-           "command": "pwsh -Command \"if ([Console]::In.ReadToEnd() -match 'BudgetTracker.csproj') { [Console]::Error.WriteLine('Blocked: change the project file with the dotnet CLI (dotnet add package, dotnet add reference), not by editing it directly.'); exit 2 }; exit 0\""
-         }
-       }
-     ]
-   }
-   ```
-
-   </TabItem>
-   </Tabs>
-
-   The guard scans the raw stdin context for the filename rather than depending on a specific
-   field name. That keeps it short and robust.
-
-2. Restart Kiro to load the new hook, then ask the agent to edit the project file directly:
-
-   ```text
-   Add a comment to the top of BudgetTracker.csproj.
-   ```
-
-   The write is blocked before it happens. The agent gets the guard's message and reports that
-   it can't edit the project file directly, while edits to any other file still work. That's the
-   one thing it doesn't get an opinion about.
-
-</Steps>
-
 <Aside type="tip" title="The shapes of a hook">
-Step back and notice the shapes you've now built, because most automation you'll write is
+Step back and notice the shapes a hook can take, because most automation you'll write is
 one of them:
 
 - **Inject:** a `SessionStart` hook hands the agent context (`command`, computed) or
-  standing instructions (`agent`, fixed) before you type.
-- **React:** the `PostFileSave` hook responds to something that already happened (catching
-  the regression).
-- **Enforce:** the `PreToolUse` hook applies a rule and can stop an action outright
-  (protecting the file).
+  standing instructions (`agent`, fixed) before you type. *(You built two of these.)*
+- **React:** a `PostFileSave` hook responds to something that already happened, like catching
+  the regression you just saw. *(You built this one.)*
+- **Enforce:** a `PreToolUse` hook applies a rule and can stop an action outright before it
+  runs (exit code `2`), for example blocking edits to a file the agent shouldn't touch.
 </Aside>
